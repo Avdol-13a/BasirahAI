@@ -30,5 +30,5 @@ To get *our own* measured numbers (rather than relying solely on the author's se
 
 ## Fill in as you go
 
-- [ ] Day 2 evaluation sample size actually used, and confusion matrix — recorded in `docs/EVALUATION_RESULTS.md`, referenced here
-- [ ] Confirmation the Kaggle competition rules were (re-)accepted before this sample was downloaded
+- [x] Day 2 evaluation sample size actually used, and confusion matrix — 201 images, recorded in `docs/EVALUATION_RESULTS.md` (2026-08-31). **Note:** the sample was necessarily drawn from `train.csv` (the competition's only publicly labeled split — `test.csv` has no public labels), which is very likely the same data the model author trained on. See the caveat in `docs/EVALUATION_RESULTS.md` before quoting the resulting numbers anywhere.
+- [x] Confirmation the Kaggle competition rules were (re-)accepted before this sample was downloaded — confirmed via the Kaggle API (`userHasEntered: True` for the account used)

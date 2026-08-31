@@ -36,6 +36,7 @@ app/macos/Flutter/ephemeral/
 Thumbs.db
 .vscode/
 .idea/
+.claude/
 .railway/
 .railway-cli-temp/
 railway-*.zip
@@ -45,3 +46,15 @@ railway-*.zip
 backend/*.jpg
 backend/*.png
 !backend/app/**
+
+# --- APTOS 2019 Kaggle data pulled for the Day 2 evaluation ---
+# Competition license is "Competition Use and Non-Commercial & Academic
+# Research" — redistribution not permitted. Images, raw CSV, and our sample
+# manifest/results are all excluded; only the reproducible scripts are
+# tracked. See docs/DATASET.md and docs/EVALUATION_RESULTS.md for the
+# permanent, honest record of what was measured.
+backend/eval_data/images/
+backend/eval_data/train.csv
+backend/eval_data/sample_manifest.csv
+backend/eval_data/raw_results.json
+backend/eval_data/metrics_summary.json

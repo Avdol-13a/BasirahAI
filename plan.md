@@ -103,7 +103,7 @@ basirah/
 - [x] Backend deployed to public HTTPS: `https://basirahai-api-production.up.railway.app`
 - [x] Live `/health` and `/screen` verified; warm requests measured at ~0.72s and ~0.74s respectively on 2026-08-31
 - [x] Full Flutter flow tested end-to-end against live Railway backend + live Supabase on the Android emulator (2026-08-31): capture → upload → inference → result → saved to patient history, confirmed with a synthetic test image (real APTOS images still needed for the accuracy evaluation below). Found and fixed a real bug along the way — see Troubleshooting Notes.
-- [ ] Independent sanity-check evaluation run against real APTOS sample images (our own numbers, not the author's)
+- [x] Independent sanity-check evaluation run against real APTOS sample images (2026-08-31, 201 images, 0 errors) — **but see the important caveat in `docs/EVALUATION_RESULTS.md`: the sample necessarily came from `train.csv` (the only publicly-labeled APTOS split), which the model almost certainly trained on, so the measured 98.5% accuracy is not a genuine held-out-generalization number and must not be presented as "beating" the author's self-reported 0.840.** Low-confidence cutoff (0.6 placeholder) still not validated — see below.
 - [x] Supabase project created, schema + RLS policies applied (done earlier — see §6/§10 of HANDOFF.md; this checklist just hadn't been ticked)
 - [x] Flutter app scaffolded
 - [x] Auth screens (login/signup)
