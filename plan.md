@@ -110,6 +110,7 @@ basirah/
 - [x] Patient CRUD screens
 - [x] Screening capture → upload → result flow (talking to the real deployed backend) — verified 2026-08-31 on emulator, not yet on a real device (see below)
 - [x] Screening history
+- [x] Visual redesign ("Warm Earth & Trust" direction — deep indigo primary, terracotta accent for screening-specific CTAs, sage-green/vermillion/cool-gray for the three result states, Lora + Manrope typefaces). Drafted as a design canvas mockup, then implemented across all 7 screens in `app/lib/theme/app_theme.dart` (shared tokens) — logic/state untouched, `flutter analyze` and `flutter test` both clean, verified visually on the emulator against a real session. Fonts bundled locally as static assets (`app/assets/fonts/`, SIL OFL license) rather than via the `google_fonts` package, which pulls in native-asset dependencies that need Windows Developer Mode to build on this machine.
 - [ ] Urdu/RTL localization
 - [ ] Full manual test pass
 - [ ] Release APK built and verified on a real phone over real mobile data

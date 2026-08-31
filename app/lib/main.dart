@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/env.dart';
 import 'screens/auth/auth_gate.dart';
+import 'theme/app_theme.dart';
 
 /// Lets a screen (e.g. PatientDetailScreen) know when it's been revealed
 /// again after a pushed route above it was popped OR replaced away —
@@ -27,10 +28,7 @@ class BasirahApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BasirahAI',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.themeData(),
       navigatorObservers: [routeObserver],
       home: Env.isSupabaseConfigured ? const AuthGate() : const _MissingConfigScreen(),
     );

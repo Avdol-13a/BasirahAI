@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../theme/app_theme.dart';
 
 class PatientFormScreen extends StatefulWidget {
   const PatientFormScreen({super.key});
@@ -76,25 +77,30 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Full name *', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Full name *'),
                 validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
               const SizedBox(height: 12),
               InkWell(
+                borderRadius: BorderRadius.circular(14),
                 onTap: _pickDateOfBirth,
                 child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Date of birth (optional)', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Date of birth (optional)',
+                    prefixIcon: Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.inkMuted),
+                  ),
                   child: Text(
                     _dateOfBirth == null
                         ? 'Not set'
                         : '${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}',
+                    style: TextStyle(color: _dateOfBirth == null ? AppColors.inkFaint : AppColors.ink),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _gender,
-                decoration: const InputDecoration(labelText: 'Gender (optional)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Gender (optional)'),
                 items: const [
                   DropdownMenuItem(value: 'Female', child: Text('Female')),
                   DropdownMenuItem(value: 'Male', child: Text('Male')),
@@ -105,20 +111,26 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _cnicController,
-                decoration: const InputDecoration(labelText: 'CNIC (optional)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'CNIC (optional)',
+                  prefixIcon: Icon(Icons.badge_outlined, size: 20, color: AppColors.inkMuted),
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone (optional)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Phone (optional)',
+                  prefixIcon: Icon(Icons.call_outlined, size: 20, color: AppColors.inkMuted),
+                ),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 20),
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                  child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger)),
                 ),
               ElevatedButton(
                 onPressed: _isSaving ? null : _save,

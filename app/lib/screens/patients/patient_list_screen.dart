@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/patient.dart';
+import '../../theme/app_theme.dart';
 import 'patient_detail_screen.dart';
 import 'patient_form_screen.dart';
 
@@ -45,14 +46,22 @@ class _PatientListScreenState extends State<PatientListScreen> {
     if (created == true) _loadPatients();
   }
 
+  String _initialsFor(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Patients'),
+        title: Text('Patients', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 26)),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
+            color: AppColors.inkMuted,
             tooltip: 'Log out',
             onPressed: () => _supabase.auth.signOut(),
           ),
@@ -64,8 +73,9 @@ class _PatientListScreenState extends State<PatientListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addPatient,
-        icon: const Icon(Icons.person_add),
+        icon: const Icon(Icons.add),
         label: const Text('New Patient'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
       ),
     );
   }
@@ -75,37 +85,83 @@ class _PatientListScreenState extends State<PatientListScreen> {
       return ListView(
         children: [
           const SizedBox(height: 120),
-          Icon(Icons.wifi_off, size: 48, color: Colors.grey.shade400),
+          const Icon(Icons.wifi_off, size: 48, color: AppColors.inkFaint),
           const SizedBox(height: 12),
-          Center(child: Text(_errorMessage!, textAlign: TextAlign.center)),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkMuted)),
+            ),
+          ),
         ],
       );
     }
     if (_patients == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_patients!.isEmpty) {
       return ListView(
         children: [
           const SizedBox(height: 120),
-          Icon(Icons.people_outline, size: 48, color: Colors.grey.shade400),
+          const Icon(Icons.people_outline, size: 48, color: AppColors.inkFaint),
           const SizedBox(height: 12),
-          const Center(child: Text('No patients yet. Tap "New Patient" to add one.')),
+          const Center(child: Text('No patients yet. Tap "New Patient" to add one.', style: TextStyle(color: AppColors.inkMuted))),
         ],
       );
     }
     return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 96),
       itemCount: _patients!.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, i) {
         final patient = _patients![i];
-        return ListTile(
-          leading: const CircleAvatar(child: Icon(Icons.person)),
-          title: Text(patient.name),
-          subtitle: patient.gender != null ? Text(patient.gender!) : null,
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => PatientDetailScreen(patient: patient)),
+        return Material(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => PatientDetailScreen(patient: patient)),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.border),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentSoft,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      _initialsFor(patient.name),
+                      style: const TextStyle(fontFamily: AppTheme.fontDisplay, fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.accentSoftInk),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(patient.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5, color: AppColors.ink), overflow: TextOverflow.ellipsis),
+                        if (patient.gender != null) ...[
+                          const SizedBox(height: 2),
+                          Text(patient.gender!, style: const TextStyle(fontSize: 13, color: AppColors.inkMuted)),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: AppColors.inkMuted),
+                ],
+              ),
+            ),
           ),
         );
       },

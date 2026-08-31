@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../theme/app_theme.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -53,46 +54,54 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.remove_red_eye_outlined, size: 64, color: Colors.teal),
-                  const SizedBox(height: 12),
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(color: AppColors.accentSoft, borderRadius: BorderRadius.circular(22)),
+                      child: const Icon(Icons.remove_red_eye_outlined, size: 34, color: AppColors.accentSoftInk),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   Text(
                     'BasirahAI',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Diabetic retinopathy screening support',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 36),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'Email'),
                     validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'Password'),
                     validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null,
                   ),
                   const SizedBox(height: 16),
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      child: Text(_errorMessage!, style: const TextStyle(color: AppColors.danger)),
                     ),
+                  const SizedBox(height: 6),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _signIn,
                     child: _isLoading
