@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/patient.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/gender_label.dart';
+import '../../widgets/language_toggle_button.dart';
 import 'patient_detail_screen.dart';
 import 'patient_form_screen.dart';
 
@@ -35,7 +38,9 @@ class _PatientListScreenState extends State<PatientListScreen> {
     } catch (e) {
       // ignore: avoid_print
       print('LOAD PATIENTS ERROR: $e');
-      setState(() => _errorMessage = "Couldn't load patients. Check your connection and pull to retry.");
+      if (mounted) {
+        setState(() => _errorMessage = AppLocalizations.of(context).loadPatientsError);
+      }
     }
   }
 
@@ -55,32 +60,37 @@ class _PatientListScreenState extends State<PatientListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Patients', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 26)),
+        title: Text(l10n.patientsTitle, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 26)),
         actions: [
+          const Padding(padding: EdgeInsetsDirectional.only(end: 4), child: LanguageToggleButton()),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Transform.flip(
+              flipX: Directionality.of(context) == TextDirection.rtl,
+              child: const Icon(Icons.logout),
+            ),
             color: AppColors.inkMuted,
-            tooltip: 'Log out',
+            tooltip: l10n.logOutTooltip,
             onPressed: () => _supabase.auth.signOut(),
           ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadPatients,
-        child: _buildBody(),
+        child: _buildBody(l10n),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addPatient,
         icon: const Icon(Icons.add),
-        label: const Text('New Patient'),
+        label: Text(l10n.newPatientButton),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_errorMessage != null) {
       return ListView(
         children: [
@@ -105,7 +115,7 @@ class _PatientListScreenState extends State<PatientListScreen> {
           const SizedBox(height: 120),
           const Icon(Icons.people_outline, size: 48, color: AppColors.inkFaint),
           const SizedBox(height: 12),
-          const Center(child: Text('No patients yet. Tap "New Patient" to add one.', style: TextStyle(color: AppColors.inkMuted))),
+          Center(child: Text(l10n.noPatientsMessage, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkMuted))),
         ],
       );
     }
@@ -153,12 +163,15 @@ class _PatientListScreenState extends State<PatientListScreen> {
                         Text(patient.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5, color: AppColors.ink), overflow: TextOverflow.ellipsis),
                         if (patient.gender != null) ...[
                           const SizedBox(height: 2),
-                          Text(patient.gender!, style: const TextStyle(fontSize: 13, color: AppColors.inkMuted)),
+                          Text(localizedGender(patient.gender!, l10n), style: const TextStyle(fontSize: 13, color: AppColors.inkMuted)),
                         ],
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: AppColors.inkMuted),
+                  Transform.flip(
+                    flipX: Directionality.of(context) == TextDirection.rtl,
+                    child: const Icon(Icons.chevron_right, color: AppColors.inkMuted),
+                  ),
                 ],
               ),
             ),

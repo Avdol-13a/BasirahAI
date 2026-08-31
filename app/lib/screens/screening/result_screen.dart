@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/result_category.dart';
 import '../../services/inference_service.dart';
 import '../../theme/app_theme.dart';
@@ -42,53 +43,52 @@ class _ResultScreenState extends State<ResultScreen> {
       });
       setState(() => _isSaved = true);
     } catch (e) {
-      setState(() => _saveError = "This result wasn't saved to history — check your connection. The screening itself is still valid.");
+      if (mounted) {
+        setState(() => _saveError = AppLocalizations.of(context).saveResultError);
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  _ResultContent _contentFor(ResultCategory category) {
+  _ResultContent _contentFor(BuildContext context, ResultCategory category) {
+    final l10n = AppLocalizations.of(context);
     switch (category) {
       case ResultCategory.nonReferable:
         return _ResultContent(
           icon: Icons.check_circle_outline,
           color: AppColors.success,
           badgeBg: AppColors.successSoft,
-          headline: 'No Urgent Concern Found',
-          message: 'No signs of urgent concern were found in this screening. This is not a '
-              'diagnosis. Regular eye check-ups are still recommended, especially if the '
-              'patient has diabetes.',
+          headline: l10n.nonReferableHeadline,
+          message: l10n.nonReferableMessage,
         );
       case ResultCategory.referable:
         return _ResultContent(
           icon: Icons.warning_amber_rounded,
           color: AppColors.danger,
           badgeBg: AppColors.dangerSoft,
-          headline: 'Please See an Eye-Care Professional',
-          message: 'This screening found signs that should be checked by an eye-care '
-              'professional. Please arrange an ophthalmologist visit as soon as possible. '
-              'This is not a diagnosis — only a specialist can confirm what this means.',
+          headline: l10n.referableHeadline,
+          message: l10n.referableMessage,
         );
       case ResultCategory.lowConfidence:
         return _ResultContent(
           icon: Icons.help_outline,
           color: AppColors.neutral,
           badgeBg: AppColors.neutralSoft,
-          headline: 'Result Not Clear',
-          message: 'This screening could not give a clear result. Please see an eye-care '
-              'professional to be sure.',
+          headline: l10n.lowConfidenceHeadline,
+          message: l10n.lowConfidenceMessage,
         );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final category = ResultCategorizer.categorize(widget.result);
-    final content = _contentFor(category);
+    final content = _contentFor(context, category);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Screening Result')),
+      appBar: AppBar(title: Text(l10n.resultTitle)),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(26, 8, 26, 24),
         child: Column(
@@ -113,7 +113,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(color: content.badgeBg, borderRadius: BorderRadius.circular(20)),
                 child: Text(
-                  'Confidence: ${(widget.result.confidence * 100).toStringAsFixed(0)}%',
+                  l10n.confidencePercent((widget.result.confidence * 100).toStringAsFixed(0)),
                   style: TextStyle(color: content.color, fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
@@ -122,11 +122,10 @@ class _ResultScreenState extends State<ResultScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(16)),
-              child: const Text(
-                'BasirahAI is a screening aid, not a diagnosis. It has not been clinically '
-                'validated. Always follow up with a qualified eye-care professional.',
+              child: Text(
+                l10n.safetyDisclaimer,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: AppColors.inkMuted, height: 1.5),
+                style: const TextStyle(fontSize: 12, color: AppColors.inkMuted, height: 1.5),
               ),
             ),
             const SizedBox(height: 14),
@@ -135,13 +134,13 @@ class _ResultScreenState extends State<ResultScreen> {
             else if (_saveError != null)
               Text(_saveError!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.danger, fontSize: 12))
             else if (_isSaved)
-              const Text('Saved to patient history', textAlign: TextAlign.center, style: TextStyle(color: AppColors.inkFaint, fontSize: 12)),
+              Text(l10n.savedToHistory, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkFaint, fontSize: 12)),
             const SizedBox(height: 24),
             ElevatedButton(
               // ScreeningCaptureScreen pushed this screen via pushReplacement,
               // so a single pop here returns straight to PatientDetailScreen.
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Done'),
+              child: Text(l10n.doneButton),
             ),
           ],
         ),

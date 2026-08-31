@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/env.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/auth/auth_gate.dart';
 import 'theme/app_theme.dart';
 
@@ -21,8 +23,26 @@ Future<void> main() async {
   runApp(const BasirahApp());
 }
 
-class BasirahApp extends StatelessWidget {
+class BasirahApp extends StatefulWidget {
   const BasirahApp({super.key});
+
+  /// Switches the whole app's language. Plain setState-based, matching
+  /// this project's "no state-management package" convention — see the
+  /// language-toggle button used across screens (theme/app_theme.dart).
+  static void setLocale(BuildContext context, Locale locale) {
+    context.findAncestorStateOfType<_BasirahAppState>()?._setLocale(locale);
+  }
+
+  @override
+  State<BasirahApp> createState() => _BasirahAppState();
+}
+
+class _BasirahAppState extends State<BasirahApp> {
+  Locale _locale = const Locale('en');
+
+  void _setLocale(Locale locale) {
+    setState(() => _locale = locale);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +50,14 @@ class BasirahApp extends StatelessWidget {
       title: 'BasirahAI',
       theme: AppTheme.themeData(),
       navigatorObservers: [routeObserver],
+      locale: _locale,
+      localizationsDelegates: const [
+        ...AppLocalizations.localizationsDelegates,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Env.isSupabaseConfigured ? const AuthGate() : const _MissingConfigScreen(),
     );
   }

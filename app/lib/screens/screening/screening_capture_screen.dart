@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/inference_service.dart';
 import '../../theme/app_theme.dart';
 import 'result_screen.dart';
@@ -54,16 +55,35 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
         ),
       );
     } on InferenceException catch (e) {
-      setState(() => _errorMessage = e.userMessage);
+      if (mounted) setState(() => _errorMessage = _messageFor(context, e));
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
   }
 
+  String _messageFor(BuildContext context, InferenceException e) {
+    final l10n = AppLocalizations.of(context);
+    switch (e.code) {
+      case InferenceErrorCode.connection:
+        return l10n.connectionErrorMsg;
+      case InferenceErrorCode.slowConnection:
+        return l10n.slowConnectionMsg;
+      case InferenceErrorCode.serverStarting:
+        return l10n.serverStartingMsg;
+      case InferenceErrorCode.serverError:
+        // The backend's own `detail` message is always English (see
+        // InferenceException docs) — shown as-is when present.
+        return e.detail ?? l10n.serverErrorMsg;
+      case InferenceErrorCode.generic:
+        return l10n.genericInferenceErrorMsg;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('New Screening')),
+      appBar: AppBar(title: Text(l10n.newScreeningButton)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -94,7 +114,7 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _isUploading ? null : () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                    label: const Text('Camera'),
+                    label: Text(l10n.cameraButton),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -102,7 +122,7 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _isUploading ? null : () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library_outlined, size: 18),
-                    label: const Text('Gallery'),
+                    label: Text(l10n.galleryButton),
                   ),
                 ),
               ],
@@ -118,7 +138,7 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('Uploading and analyzing...', style: TextStyle(color: AppColors.inkMuted)),
+              Text(l10n.uploadingMessage, style: const TextStyle(color: AppColors.inkMuted)),
               const SizedBox(height: 16),
             ],
             if (_errorMessage != null) ...[
@@ -126,12 +146,12 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
               const SizedBox(height: 8),
               TextButton(
                 onPressed: _isUploading ? null : _analyze,
-                child: const Text('Retry'),
+                child: Text(l10n.retryButton),
               ),
             ],
             AccentButton(
               onPressed: (_selectedImage == null || _isUploading) ? null : _analyze,
-              child: const Text('Analyze'),
+              child: Text(l10n.analyzeButton),
             ),
           ],
         ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../main.dart' show routeObserver;
 import '../../models/patient.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/gender_label.dart';
 import '../screening/screening_capture_screen.dart';
 
 class PatientDetailScreen extends StatefulWidget {
@@ -55,7 +57,9 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> with RouteAwa
           .order('created_at', ascending: false);
       setState(() => _screenings = List<Map<String, dynamic>>.from(rows));
     } catch (e) {
-      setState(() => _errorMessage = "Couldn't load screening history. Pull to retry.");
+      if (mounted) {
+        setState(() => _errorMessage = AppLocalizations.of(context).loadScreeningsError);
+      }
     }
   }
 
@@ -81,6 +85,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> with RouteAwa
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(widget.patient.name)),
       body: RefreshIndicator(
@@ -94,10 +99,11 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> with RouteAwa
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (widget.patient.gender != null) _infoRow(Icons.person_outline, widget.patient.gender!),
+                    if (widget.patient.gender != null)
+                      _infoRow(Icons.person_outline, localizedGender(widget.patient.gender!, l10n)),
                     if (widget.patient.dateOfBirth != null)
                       _infoRow(Icons.calendar_today_outlined,
-                          'Date of birth: ${widget.patient.dateOfBirth!.toIso8601String().split('T').first}'),
+                          l10n.dateOfBirthPrefixed(widget.patient.dateOfBirth!.toIso8601String().split('T').first)),
                     if (widget.patient.phone != null) _infoRow(Icons.call_outlined, widget.patient.phone!),
                   ],
                 ),
@@ -106,24 +112,24 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> with RouteAwa
             const SizedBox(height: 20),
             AccentButton(
               onPressed: _newScreening,
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_a_photo_outlined, size: 20),
-                  SizedBox(width: 10),
-                  Text('New Screening'),
+                  const Icon(Icons.add_a_photo_outlined, size: 20),
+                  const SizedBox(width: 10),
+                  Text(l10n.newScreeningButton),
                 ],
               ),
             ),
             const SizedBox(height: 28),
-            Text('Screening History', style: Theme.of(context).textTheme.titleMedium),
+            Text(l10n.screeningHistoryTitle, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             if (_errorMessage != null)
               Text(_errorMessage!, style: const TextStyle(color: AppColors.danger))
             else if (_screenings == null)
               const Center(child: CircularProgressIndicator(color: AppColors.primary))
             else if (_screenings!.isEmpty)
-              const Text('No screenings yet.', style: TextStyle(color: AppColors.inkMuted))
+              Text(l10n.noScreeningsMessage, style: const TextStyle(color: AppColors.inkMuted))
             else
               ..._screenings!.map((s) {
                 final referable = s['referable'] as bool;
@@ -154,11 +160,19 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> with RouteAwa
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(referable ? 'Referable' : 'Non-Referable',
+                              Text(referable ? l10n.referableLabel : l10n.nonReferableLabel,
                                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5, color: AppColors.ink)),
                               const SizedBox(height: 2),
                               Text(
-                                '${createdAt.toLocal().toString().split('.').first} · Confidence ${(confidence * 100).toStringAsFixed(0)}%',
+                                l10n.screeningSubtitle(
+                                  // LRM marks (U+200E) keep this LTR date/time string from
+                                  // being visually reordered by the bidi algorithm when
+                                  // embedded in RTL (Urdu) text — it contains an internal
+                                  // space, which otherwise splits it into separately-
+                                  // reordered runs.
+                                  '‎${createdAt.toLocal().toString().split('.').first}‎',
+                                  (confidence * 100).toStringAsFixed(0),
+                                ),
                                 style: const TextStyle(fontSize: 12.5, color: AppColors.inkMuted),
                               ),
                             ],

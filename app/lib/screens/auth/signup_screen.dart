@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -37,7 +38,9 @@ class _SignupScreenState extends State<SignupScreen> {
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(() => _errorMessage = 'Something went wrong. Please check your connection and try again.');
+      if (mounted) {
+        setState(() => _errorMessage = AppLocalizations.of(context).genericAuthError);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -52,8 +55,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(title: Text(l10n.createAccountTitle)),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -70,7 +74,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        'Check your email to confirm your account, then log in.',
+                        l10n.checkEmailMessage,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
@@ -84,15 +88,15 @@ class _SignupScreenState extends State<SignupScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(labelText: 'Email'),
-                          validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                          decoration: InputDecoration(labelText: l10n.emailLabel),
+                          validator: (v) => (v == null || !v.contains('@')) ? l10n.emailValidationError : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
-                          decoration: const InputDecoration(labelText: 'Password'),
-                          validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null,
+                          decoration: InputDecoration(labelText: l10n.passwordLabel),
+                          validator: (v) => (v == null || v.length < 6) ? l10n.passwordValidationError : null,
                         ),
                         const SizedBox(height: 16),
                         if (_errorMessage != null)
@@ -106,7 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: _isLoading
                               ? const SizedBox(
                                   height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Text('Sign Up'),
+                              : Text(l10n.signUpButton),
                         ),
                       ],
                     ),

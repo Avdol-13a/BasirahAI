@@ -111,7 +111,7 @@ basirah/
 - [x] Screening capture → upload → result flow (talking to the real deployed backend) — verified 2026-08-31 on emulator, not yet on a real device (see below)
 - [x] Screening history
 - [x] Visual redesign ("Warm Earth & Trust" direction — deep indigo primary, terracotta accent for screening-specific CTAs, sage-green/vermillion/cool-gray for the three result states, Lora + Manrope typefaces). Drafted as a design canvas mockup, then implemented across all 7 screens in `app/lib/theme/app_theme.dart` (shared tokens) — logic/state untouched, `flutter analyze` and `flutter test` both clean, verified visually on the emulator against a real session. Fonts bundled locally as static assets (`app/assets/fonts/`, SIL OFL license) rather than via the `google_fonts` package, which pulls in native-asset dependencies that need Windows Developer Mode to build on this machine.
-- [ ] Urdu/RTL localization
+- [x] Urdu/RTL localization — `flutter_localizations` + `intl`, ARB-based (`app/lib/l10n/app_en.arb`, `app_ur.arb`, gen-l10n via `app/l10n.yaml`). All 7 screens fully localized, including backend-error messages (`InferenceException` now carries an `InferenceErrorCode` enum instead of hardcoded English so the UI layer picks the localized string; the backend's own `detail` field, when present, stays English since the backend itself doesn't localize — documented in `inference_service.dart`). App-wide language toggle (`lib/widgets/language_toggle_button.dart`) on the Login and Patients screens, in-memory only (resets to English on cold start — no `shared_preferences` dependency added, to avoid another potential Windows-Developer-Mode build blocker; a reasonable trade-off for the hackathon timeline, revisit if there's time). Verified visually on the emulator in both languages: RTL mirroring correct throughout (directional icons flipped via `Transform.flip` — `Icon`'s `matchTextDirection` doesn't actually exist, don't reach for it again; `Positioned`/`Padding` use `*Directional` variants), and one real bidi bug found and fixed — a raw LTR timestamp with an internal space was getting visually reordered when embedded in Urdu text; fixed with U+200E LRM marks (`patient_detail_screen.dart`).
 - [ ] Full manual test pass
 - [ ] Release APK built and verified on a real phone over real mobile data
 - [ ] `docs/DATASET.md`, `docs/ML_PLAN.md`, `docs/EVALUATION_RESULTS.md`, `docs/IMAGE_PIPELINE.md` rewritten for this architecture
@@ -148,7 +148,7 @@ If time runs out, everything below "Optional Features" is cut before anything on
 - [ ] Weak/interrupted connection mid-upload → retry path works
 - [ ] Two different Supabase test accounts → each only sees their own patients/history (RLS actually enforced, not just app-layer filtering)
 - [ ] Supabase project cold-restart-after-pause behavior verified at least once before the demo
-- [ ] Language toggle switches the entire app (including auth/patient/history screens, not just the old screening flow) to Urdu with correct RTL
+- [x] Language toggle switches the entire app (including auth/patient/history screens, not just the old screening flow) to Urdu with correct RTL — verified 2026-08-31 on the emulator across all 7 screens
 - [ ] Tested on a real Android phone over real mobile data, not just Wi-Fi/emulator
 
 ## Deployment Checklist

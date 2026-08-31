@@ -25,12 +25,21 @@ class ScreeningResult {
   }
 }
 
-/// Thrown for any failure calling the inference backend. [userMessage] is
-/// always safe to show directly in the UI (see docs/MEDICAL_SAFETY.md /
-/// docs/IMAGE_PIPELINE.md for the wording contract this follows).
+/// Standard failure categories for calling the inference backend, so the UI
+/// layer (which has a BuildContext, and localizes) picks the message —
+/// see docs/MEDICAL_SAFETY.md / docs/IMAGE_PIPELINE.md for the wording
+/// contract each category follows.
+enum InferenceErrorCode { connection, slowConnection, serverStarting, serverError, generic }
+
+/// Thrown for any failure calling the inference backend. [detail], when
+/// present, is a specific, user-safe message the backend itself returned
+/// (validation errors — bad file, too large, corrupt, etc.; see
+/// backend/app/main.py) and is always in English, since the backend does
+/// not localize — the UI falls back to [code]'s localized message otherwise.
 class InferenceException implements Exception {
-  final String userMessage;
-  InferenceException(this.userMessage);
+  final InferenceErrorCode code;
+  final String? detail;
+  InferenceException(this.code, {this.detail});
 }
 
 class InferenceService {
@@ -59,27 +68,24 @@ class InferenceService {
 
       return ScreeningResult.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      throw InferenceException(_messageFor(e));
+      throw _exceptionFor(e);
     }
   }
 
-  String _messageFor(DioException e) {
+  InferenceException _exceptionFor(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionError:
-        return "Couldn't reach the server. Check your internet connection and try again.";
+        return InferenceException(InferenceErrorCode.connection);
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
-        return 'The connection is too slow right now. Please try again.';
+        return InferenceException(InferenceErrorCode.slowConnection);
       case DioExceptionType.receiveTimeout:
-        return 'The server is taking too long to respond (it may be starting up after being idle). Please try again in a moment.';
+        return InferenceException(InferenceErrorCode.serverStarting);
       case DioExceptionType.badResponse:
-        // The backend returns a specific, user-safe message in `detail` for
-        // validation errors (bad file, too large, corrupt, etc.) — see
-        // backend/app/main.py and docs/IMAGE_PIPELINE.md.
         final detail = e.response?.data is Map ? e.response?.data['detail'] : null;
-        return detail is String ? detail : 'Something went wrong on the server. Please try again.';
+        return InferenceException(InferenceErrorCode.serverError, detail: detail is String ? detail : null);
       default:
-        return 'Something went wrong. Please try again.';
+        return InferenceException(InferenceErrorCode.generic);
     }
   }
 }

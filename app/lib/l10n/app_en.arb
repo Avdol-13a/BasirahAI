@@ -1,0 +1,86 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "BasirahAI",
+  "appTagline": "Diabetic retinopathy screening support",
+
+  "switchToUrdu": "اردو",
+  "switchToEnglish": "English",
+
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "logInButton": "Log In",
+  "noAccountSignUp": "Don't have an account? Sign up",
+  "emailValidationError": "Enter a valid email",
+  "passwordValidationError": "At least 6 characters",
+  "genericAuthError": "Something went wrong. Please check your connection and try again.",
+
+  "createAccountTitle": "Create Account",
+  "signUpButton": "Sign Up",
+  "checkEmailMessage": "Check your email to confirm your account, then log in.",
+
+  "patientsTitle": "Patients",
+  "logOutTooltip": "Log out",
+  "newPatientButton": "New Patient",
+  "noPatientsMessage": "No patients yet. Tap \"New Patient\" to add one.",
+  "loadPatientsError": "Couldn't load patients. Check your connection and pull to retry.",
+
+  "fullNameLabel": "Full name *",
+  "fullNameRequiredError": "Name is required",
+  "dobLabel": "Date of birth (optional)",
+  "dobNotSet": "Not set",
+  "genderLabel": "Gender (optional)",
+  "genderFemale": "Female",
+  "genderMale": "Male",
+  "genderOther": "Other",
+  "cnicLabel": "CNIC (optional)",
+  "phoneLabel": "Phone (optional)",
+  "savePatientButton": "Save Patient",
+  "savePatientError": "Couldn't save this patient. Check your connection and try again.",
+
+  "newScreeningButton": "New Screening",
+  "screeningHistoryTitle": "Screening History",
+  "noScreeningsMessage": "No screenings yet.",
+  "loadScreeningsError": "Couldn't load screening history. Pull to retry.",
+  "referableLabel": "Referable",
+  "nonReferableLabel": "Non-Referable",
+  "dateOfBirthPrefixed": "Date of birth: {date}",
+  "@dateOfBirthPrefixed": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "screeningSubtitle": "{date} · Confidence: {percent}%",
+  "@screeningSubtitle": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "percent": { "type": "String" }
+    }
+  },
+
+  "cameraButton": "Camera",
+  "galleryButton": "Gallery",
+  "analyzeButton": "Analyze",
+  "uploadingMessage": "Uploading and analyzing...",
+  "retryButton": "Retry",
+
+  "resultTitle": "Screening Result",
+  "nonReferableHeadline": "No Urgent Concern Found",
+  "nonReferableMessage": "No signs of urgent concern were found in this screening. This is not a diagnosis. Regular eye check-ups are still recommended, especially if the patient has diabetes.",
+  "referableHeadline": "Please See an Eye-Care Professional",
+  "referableMessage": "This screening found signs that should be checked by an eye-care professional. Please arrange an ophthalmologist visit as soon as possible. This is not a diagnosis — only a specialist can confirm what this means.",
+  "lowConfidenceHeadline": "Result Not Clear",
+  "lowConfidenceMessage": "This screening could not give a clear result. Please see an eye-care professional to be sure.",
+  "confidencePercent": "Confidence: {percent}%",
+  "@confidencePercent": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "safetyDisclaimer": "BasirahAI is a screening aid, not a diagnosis. It has not been clinically validated. Always follow up with a qualified eye-care professional.",
+  "savedToHistory": "Saved to patient history",
+  "saveResultError": "This result wasn't saved to history — check your connection. The screening itself is still valid.",
+  "doneButton": "Done",
+
+  "connectionErrorMsg": "Couldn't reach the server. Check your internet connection and try again.",
+  "slowConnectionMsg": "The connection is too slow right now. Please try again.",
+  "serverStartingMsg": "The server is taking too long to respond (it may be starting up after being idle). Please try again in a moment.",
+  "serverErrorMsg": "Something went wrong on the server. Please try again.",
+  "genericInferenceErrorMsg": "Something went wrong. Please try again."
+}

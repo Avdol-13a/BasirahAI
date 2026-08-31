@@ -31,6 +31,12 @@ app/ios/Flutter/ephemeral/
 app/macos/Flutter/ephemeral/
 *.iml
 
+# --- Generated localization code — regenerated at build time from
+# app/lib/l10n/app_en.arb / app_ur.arb via l10n.yaml (generate: true) ---
+app/lib/l10n/app_localizations.dart
+app/lib/l10n/app_localizations_en.dart
+app/lib/l10n/app_localizations_ur.dart
+
 # --- OS / editor cruft ---
 .DS_Store
 Thumbs.db

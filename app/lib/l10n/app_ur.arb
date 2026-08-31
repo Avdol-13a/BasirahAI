@@ -1,0 +1,86 @@
+{
+  "@@locale": "ur",
+
+  "appTitle": "BasirahAI",
+  "appTagline": "ذیابیطس ریٹینوپیتھی اسکریننگ میں معاونت",
+
+  "switchToUrdu": "اردو",
+  "switchToEnglish": "English",
+
+  "emailLabel": "ای میل",
+  "passwordLabel": "پاس ورڈ",
+  "logInButton": "لاگ ان کریں",
+  "noAccountSignUp": "اکاؤنٹ نہیں ہے؟ سائن اپ کریں",
+  "emailValidationError": "درست ای میل درج کریں",
+  "passwordValidationError": "کم از کم 6 حروف درکار ہیں",
+  "genericAuthError": "کچھ غلط ہو گیا۔ براہ کرم اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+
+  "createAccountTitle": "اکاؤنٹ بنائیں",
+  "signUpButton": "سائن اپ کریں",
+  "checkEmailMessage": "اپنا اکاؤنٹ تصدیق کرنے کے لیے اپنی ای میل چیک کریں، پھر لاگ ان کریں۔",
+
+  "patientsTitle": "مریض",
+  "logOutTooltip": "لاگ آؤٹ",
+  "newPatientButton": "نیا مریض",
+  "noPatientsMessage": "ابھی تک کوئی مریض نہیں ہے۔ ایک شامل کرنے کے لیے \"نیا مریض\" پر ٹیپ کریں۔",
+  "loadPatientsError": "مریضوں کی فہرست لوڈ نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کے لیے نیچے کھینچیں۔",
+
+  "fullNameLabel": "پورا نام *",
+  "fullNameRequiredError": "نام درکار ہے",
+  "dobLabel": "تاریخ پیدائش (اختیاری)",
+  "dobNotSet": "متعین نہیں",
+  "genderLabel": "جنس (اختیاری)",
+  "genderFemale": "خاتون",
+  "genderMale": "مرد",
+  "genderOther": "دیگر",
+  "cnicLabel": "CNIC (اختیاری)",
+  "phoneLabel": "فون نمبر (اختیاری)",
+  "savePatientButton": "مریض محفوظ کریں",
+  "savePatientError": "یہ مریض محفوظ نہیں ہو سکا۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+
+  "newScreeningButton": "نئی اسکریننگ",
+  "screeningHistoryTitle": "اسکریننگ کی تاریخ",
+  "noScreeningsMessage": "ابھی تک کوئی اسکریننگ نہیں ہے۔",
+  "loadScreeningsError": "اسکریننگ کی تاریخ لوڈ نہیں ہو سکی۔ دوبارہ کوشش کے لیے نیچے کھینچیں۔",
+  "referableLabel": "رجوع درکار",
+  "nonReferableLabel": "رجوع درکار نہیں",
+  "dateOfBirthPrefixed": "تاریخ پیدائش: {date}",
+  "@dateOfBirthPrefixed": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "screeningSubtitle": "{date} · اعتماد: {percent}%",
+  "@screeningSubtitle": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "percent": { "type": "String" }
+    }
+  },
+
+  "cameraButton": "کیمرہ",
+  "galleryButton": "گیلری",
+  "analyzeButton": "تجزیہ کریں",
+  "uploadingMessage": "اپ لوڈ اور تجزیہ ہو رہا ہے...",
+  "retryButton": "دوبارہ کوشش کریں",
+
+  "resultTitle": "اسکریننگ کا نتیجہ",
+  "nonReferableHeadline": "کوئی فوری تشویش کی بات نہیں ملی",
+  "nonReferableMessage": "اس اسکریننگ میں فوری تشویش کی کوئی علامت نہیں ملی۔ یہ تشخیص نہیں ہے۔ آنکھوں کا باقاعدہ معائنہ اب بھی تجویز کیا جاتا ہے، خاص طور پر اگر مریض کو ذیابیطس ہو۔",
+  "referableHeadline": "براہ کرم ماہرِ امراضِ چشم سے رجوع کریں",
+  "referableMessage": "اس اسکریننگ میں ایسی علامات ملی ہیں جن کا معائنہ ماہرِ امراضِ چشم سے کروانا ضروری ہے۔ براہ کرم جلد از جلد ماہرِ چشم سے ملاقات کا انتظام کریں۔ یہ تشخیص نہیں ہے — صرف ایک ماہر ہی اس کی تصدیق کر سکتا ہے۔",
+  "lowConfidenceHeadline": "نتیجہ واضح نہیں",
+  "lowConfidenceMessage": "یہ اسکریننگ واضح نتیجہ فراہم نہ کر سکی۔ یقینی بنانے کے لیے براہ کرم ماہرِ امراضِ چشم سے ملیں۔",
+  "confidencePercent": "اعتماد: {percent}%",
+  "@confidencePercent": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "safetyDisclaimer": "BasirahAI ایک اسکریننگ معاون ہے، تشخیص نہیں ہے۔ اسے طبی طور پر تصدیق شدہ نہیں کیا گیا۔ ہمیشہ کسی مستند ماہرِ امراضِ چشم سے رجوع کریں۔",
+  "savedToHistory": "مریض کی تاریخ میں محفوظ ہو گیا",
+  "saveResultError": "یہ نتیجہ تاریخ میں محفوظ نہیں ہو سکا — اپنا کنکشن چیک کریں۔ اسکریننگ خود بدستور درست ہے۔",
+  "doneButton": "مکمل",
+
+  "connectionErrorMsg": "سرور تک نہیں پہنچا جا سکا۔ اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+  "slowConnectionMsg": "کنکشن اس وقت بہت سست ہے۔ براہ کرم دوبارہ کوشش کریں۔",
+  "serverStartingMsg": "سرور کو جواب دینے میں بہت وقت لگ رہا ہے (ہو سکتا ہے وہ غیر فعالی کے بعد دوبارہ شروع ہو رہا ہو)۔ براہ کرم تھوڑی دیر بعد دوبارہ کوشش کریں۔",
+  "serverErrorMsg": "سرور پر کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
+  "genericInferenceErrorMsg": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔"
+}

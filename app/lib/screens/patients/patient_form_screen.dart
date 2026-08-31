@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class PatientFormScreen extends StatefulWidget {
@@ -50,7 +51,9 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
       });
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      setState(() => _errorMessage = "Couldn't save this patient. Check your connection and try again.");
+      if (mounted) {
+        setState(() => _errorMessage = AppLocalizations.of(context).savePatientError);
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -66,8 +69,9 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('New Patient')),
+      appBar: AppBar(title: Text(l10n.newPatientButton)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -77,21 +81,21 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Full name *'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                decoration: InputDecoration(labelText: l10n.fullNameLabel),
+                validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fullNameRequiredError : null,
               ),
               const SizedBox(height: 12),
               InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: _pickDateOfBirth,
                 child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Date of birth (optional)',
-                    prefixIcon: Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.inkMuted),
+                  decoration: InputDecoration(
+                    labelText: l10n.dobLabel,
+                    prefixIcon: const Icon(Icons.calendar_today_outlined, size: 20, color: AppColors.inkMuted),
                   ),
                   child: Text(
                     _dateOfBirth == null
-                        ? 'Not set'
+                        ? l10n.dobNotSet
                         : '${_dateOfBirth!.year}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}',
                     style: TextStyle(color: _dateOfBirth == null ? AppColors.inkFaint : AppColors.ink),
                   ),
@@ -100,29 +104,29 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _gender,
-                decoration: const InputDecoration(labelText: 'Gender (optional)'),
-                items: const [
-                  DropdownMenuItem(value: 'Female', child: Text('Female')),
-                  DropdownMenuItem(value: 'Male', child: Text('Male')),
-                  DropdownMenuItem(value: 'Other', child: Text('Other')),
+                decoration: InputDecoration(labelText: l10n.genderLabel),
+                items: [
+                  DropdownMenuItem(value: 'Female', child: Text(l10n.genderFemale)),
+                  DropdownMenuItem(value: 'Male', child: Text(l10n.genderMale)),
+                  DropdownMenuItem(value: 'Other', child: Text(l10n.genderOther)),
                 ],
                 onChanged: (v) => setState(() => _gender = v),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _cnicController,
-                decoration: const InputDecoration(
-                  labelText: 'CNIC (optional)',
-                  prefixIcon: Icon(Icons.badge_outlined, size: 20, color: AppColors.inkMuted),
+                decoration: InputDecoration(
+                  labelText: l10n.cnicLabel,
+                  prefixIcon: const Icon(Icons.badge_outlined, size: 20, color: AppColors.inkMuted),
                 ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone (optional)',
-                  prefixIcon: Icon(Icons.call_outlined, size: 20, color: AppColors.inkMuted),
+                decoration: InputDecoration(
+                  labelText: l10n.phoneLabel,
+                  prefixIcon: const Icon(Icons.call_outlined, size: 20, color: AppColors.inkMuted),
                 ),
                 keyboardType: TextInputType.phone,
               ),
@@ -136,7 +140,7 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
                 onPressed: _isSaving ? null : _save,
                 child: _isSaving
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Save Patient'),
+                    : Text(l10n.savePatientButton),
               ),
             ],
           ),
