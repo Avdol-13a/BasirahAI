@@ -1,0 +1,8 @@
+.railway-cli-temp/
+.venv/
+railway-v*.zip
+__pycache__/
+*.py[cod]
+Caddyfile
+docker-compose.yml
+README.md

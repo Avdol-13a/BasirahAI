@@ -1,0 +1,47 @@
+# --- Python / backend ---
+backend/.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# --- Secrets — never commit ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials*.json
+secrets*.json
+kaggle.json
+*serviceAccountKey*.json
+
+# --- Flutter / Dart (added when app/ is scaffolded) ---
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/local.properties
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/flutter_export_environment.sh
+app/ios/Flutter/ephemeral/
+app/macos/Flutter/ephemeral/
+*.iml
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.railway/
+.railway-cli-temp/
+railway-*.zip
+.tools/
+
+# --- Scratch test artifacts ---
+backend/*.jpg
+backend/*.png
+!backend/app/**

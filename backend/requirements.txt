@@ -1,0 +1,7 @@
+# Runtime intentionally excludes fastai. The Docker build converts the trusted
+# published checkpoint to a plain state dict; see export_model.py. PyTorch's
+# CPU-only wheels are installed separately in the Dockerfile.
+fastapi[standard]
+python-multipart
+pillow
+uvicorn[standard]

@@ -1,0 +1,5 @@
+# Build-only dependencies used to convert the published fastai checkpoint.
+fastai==2.7.19
+huggingface_hub>=1.0
+toml
+

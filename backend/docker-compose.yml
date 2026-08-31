@@ -1,0 +1,25 @@
+# Runs the FastAPI backend + Caddy (automatic HTTPS reverse proxy) together
+# on the Azure VM. See README.md for the full deployment walkthrough.
+services:
+  backend:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "7860"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  caddy_data:
+  caddy_config:

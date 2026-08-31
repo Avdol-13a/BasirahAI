@@ -1,0 +1,13 @@
+# Reverse proxy that gets us free, automatic HTTPS on the Azure-provided
+# *.cloudapp.azure.com subdomain (no domain purchase, no manual cert
+# management — Caddy handles Let's Encrypt automatically for any real,
+# publicly-resolvable domain name, and Azure gives you one for free when
+# you set a "DNS name label" on the VM's public IP).
+#
+# Replace the placeholder below with your actual VM's DNS name
+# (Azure Portal → your VM → Overview → DNS name), e.g.:
+#   basirahai.eastus.cloudapp.azure.com
+
+your-dns-label.your-region.cloudapp.azure.com {
+    reverse_proxy backend:7860
+}

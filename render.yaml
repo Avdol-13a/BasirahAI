@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: basirahai-api
+    runtime: docker
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: commit
