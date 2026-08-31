@@ -139,15 +139,15 @@ If time runs out, everything below "Optional Features" is cut before anything on
 
 ## Testing Checklist
 
-- [ ] Clear fundus photo → correct Referable/Non-Referable result with confidence (EN + UR)
-- [ ] Bad/non-image file upload → clear 400 error, shown to the user, no crash
-- [ ] Empty file upload → clear 400 error
-- [ ] Oversized file (>10MB) → clear 413 error
-- [ ] Backend cold start (first request after idle) → app shows a loading/retry state, not a silent failure
-- [ ] Airplane mode / no connection → clear "no connection" error, not a generic crash
-- [ ] Weak/interrupted connection mid-upload → retry path works
-- [ ] Two different Supabase test accounts → each only sees their own patients/history (RLS actually enforced, not just app-layer filtering)
-- [ ] Supabase project cold-restart-after-pause behavior verified at least once before the demo
+- [x] Clear fundus photo → correct Referable/Non-Referable result with confidence (EN + UR) — verified repeatedly throughout 2026-08-31 testing (synthetic test images; real fundus photos still pending the real-device pass)
+- [x] Bad/non-image file upload → clear 400 error, shown to the user, no crash — verified 2026-08-31 directly against the live backend (`{"detail":"This doesn't look like a valid image file."}`, HTTP 400); the real photo picker can't actually hand the app a non-image file (OS picker only lists images), so this is backend-confirmed rather than end-to-end-UI-confirmed — the display code path is identical to the other error cases below, which *are* UI-confirmed
+- [x] Empty file upload → clear 400 error — verified 2026-08-31 directly against the live backend (`{"detail":"Uploaded file is empty."}`); same picker caveat as above
+- [x] Oversized file (>10MB) → clear 413 error — backend confirmed directly (`{"detail":"Image is too large (max 10 MB)."}`, HTTP 413) on 2026-08-31. **Finding:** this path is effectively unreachable through the real app UI — `image_picker`'s `imageQuality: 90` client-side re-compression shrinks even a 16.7MB source image well under 10MB before upload, so a real user is very unlikely to ever hit this. Not a bug, just means the app's own behavior protects against it in practice.
+- [ ] Backend cold start (first request after idle) → app shows a loading/retry state, not a silent failure — not exercised 2026-08-31 (Railway backend was warm throughout testing); worth checking once closer to the demo if the backend has been idle
+- [x] Airplane mode / no connection → clear "no connection" error, not a generic crash — verified 2026-08-31 on the emulator (wifi+data disabled via `adb shell svc wifi/data disable`): "Couldn't reach the server. Check your internet connection and try again." with a Retry button, no crash
+- [x] Weak/interrupted connection mid-upload → retry path works — verified 2026-08-31: after the offline error above, re-enabled connectivity and tapped Retry — completed the full flow through to a saved result
+- [x] Two different Supabase test accounts → each only sees their own patients/history (RLS actually enforced, not just app-layer filtering) — **rigorously verified 2026-08-31**, both through the app UI and via direct PostgREST calls bypassing the app entirely: signed in as each user's own JWT and confirmed (a) each account's patient list only shows their own data, (b) User B directly requesting User A's patient by ID gets `[]`, (c) User B querying User A's screenings by `patient_id` gets `[]`, (d) User B attempting to UPDATE User A's patient (`name: "HACKED"`) affects 0 rows and User A's data is confirmed unchanged afterward. Second test account (`rlstest01@example.com` / `TestPass123`, patient "RLS") kept as permanent test infrastructure — see HANDOFF.md §10.
+- [ ] Supabase project cold-restart-after-pause behavior verified at least once before the demo — not applicable to check right now (project has been continuously active all session, nowhere near the 7-day idle pause threshold); revisit close to the demo date if there's been a gap in usage
 - [x] Language toggle switches the entire app (including auth/patient/history screens, not just the old screening flow) to Urdu with correct RTL — verified 2026-08-31 on the emulator across all 7 screens
 - [ ] Tested on a real Android phone over real mobile data, not just Wi-Fi/emulator
 

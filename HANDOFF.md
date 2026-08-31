@@ -211,6 +211,7 @@ Preserve these — they were deliberate, not accidental, and re-litigating them 
 - `schema.sql` has been fully applied to this project already (tables + RLS + grants all live).
 - A real test account already exists and has a "Test Patient" record. Its credentials are intentionally omitted from source control; do not delete its data casually.
 - A second, likely-orphaned test account may exist: `basirahtest.qa@gmail.com` — created during an earlier test before "Confirm email" was turned off; its confirmation email was never successfully delivered (hit the rate limit). Low priority; safe to ignore or clean up later.
+- A second, **working** test account exists, created 2026-08-31 specifically to verify cross-account RLS isolation (see plan.md's Testing Checklist): **rlstest01@example.com / TestPass123**, with one patient named "RLS". Confirmed working end-to-end and worth keeping as permanent test infrastructure — useful any time RLS/isolation needs re-checking (e.g. after a schema change) without needing to create a throwaway account again.
 
 **To run the backend locally** (Windows Git Bash):
 ```bash
