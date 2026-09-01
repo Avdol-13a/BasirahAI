@@ -8,7 +8,7 @@
 
 | Situation | Trigger | English | Urdu |
 |---|---|---|---|
-| **Poor-quality / invalid image** | Backend rejects the upload before running the model (corrupt file, wrong type, too small/too large — `backend/app/main.py`'s validation) — and/or an optional client-side blur/brightness pre-check in the Flutter app, if implemented (see `plan.md` Optional Features) | "This photo isn't clear enough to check. Please retake it, holding the camera steady." / "...in better lighting." | یہ تصویر واضح نہیں ہے۔ براہ کرم کیمرہ ساکت رکھ کر دوبارہ تصویر لیں۔ / ...بہتر روشنی میں دوبارہ تصویر لیں۔ |
+| **Poor-quality / invalid image** | Backend rejects the upload before running the model (corrupt file, wrong type, too small/too large — `backend/app/main.py`'s validation) — and/or an optional client-side blur/brightness pre-check in the Flutter app, if implemented (see `dev/plan.md` Optional Features) | "This photo isn't clear enough to check. Please retake it, holding the camera steady." / "...in better lighting." | یہ تصویر واضح نہیں ہے۔ براہ کرم کیمرہ ساکت رکھ کر دوبارہ تصویر لیں۔ / ...بہتر روشنی میں دوبارہ تصویر لیں۔ |
 | **Non-Referable** | `referable: false` in the API response, and `confidence` at or above the low-confidence cutoff (see below) | "No signs of urgent concern were found in this screening. This is not a diagnosis. Regular eye check-ups are still recommended, especially if you have diabetes." | اس اسکریننگ میں فوری تشویش کی کوئی علامت نہیں ملی۔ یہ تشخیص نہیں ہے۔ آنکھوں کا باقاعدہ معائنہ اب بھی ضروری ہے، خاص طور پر اگر آپ کو ذیابیطس ہے۔ |
 | **Referable** | `referable: true` in the API response, and `confidence` at or above the low-confidence cutoff | "This screening found signs that should be checked by an eye-care professional. Please see an ophthalmologist as soon as you can. This is not a diagnosis — only a specialist can confirm what this means." | اس اسکریننگ میں ایسی علامات ملی ہیں جن کا ماہرِ امراضِ چشم سے معائنہ ضروری ہے۔ براہ کرم جلد از جلد کسی آنکھوں کے ڈاکٹر سے ملیں۔ یہ تشخیص نہیں ہے — صرف ایک ماہر ہی اس کی تصدیق کر سکتا ہے۔ |
 | **Low-confidence / borderline** | `confidence` below a chosen cutoff (starting point: 0.6 — tune during Day 2's independent evaluation and record the final value here) regardless of the `referable` value | "This screening could not give a clear result. Please see an eye-care professional to be sure." | یہ اسکریننگ واضح نتیجہ نہیں دے سکی۔ براہ کرم یقینی بنانے کے لیے آنکھوں کے ماہر سے رجوع کریں۔ |
@@ -29,7 +29,7 @@
 
 ## Translation review status
 
-**These Urdu translations were drafted to be clear, simple, and medically cautious, but have not yet been reviewed by a native Urdu-speaking medical-literacy expert.** This review is a scheduled Day 6 task (see `plan.md`), not optional polish.
+**These Urdu translations were drafted to be clear, simple, and medically cautious, but have not yet been reviewed by a native Urdu-speaking medical-literacy expert.** This review is a scheduled Day 6 task (see `dev/plan.md`), not optional polish.
 
 - [ ] Native speaker reviewed all four result messages
 - [ ] Native speaker reviewed the standing disclaimer

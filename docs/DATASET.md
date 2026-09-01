@@ -1,6 +1,6 @@
 # Dataset — BasirahAI
 
-> **We do not train on any dataset.** This document previously described a training-dataset plan (APTOS 2019, self-trained MobileNetV2). That pipeline no longer exists — see `plan.md`'s header note. This document now covers two much narrower things: (1) the dataset the *pretrained model we integrated* was trained on, as documented by its author, and (2) the small sample of images we ourselves pull down for our own independent sanity-check evaluation (Day 2) — not training data.
+> **We do not train on any dataset.** This document previously described a training-dataset plan (APTOS 2019, self-trained MobileNetV2). That pipeline no longer exists — see `dev/plan.md`'s header note. This document now covers two much narrower things: (1) the dataset the *pretrained model we integrated* was trained on, as documented by its author, and (2) the small sample of images we ourselves pull down for our own independent sanity-check evaluation (Day 2) — not training data.
 
 ## The pretrained model's training data (per its author — not verified by us)
 

@@ -17,7 +17,7 @@ Each rejection returns a specific, Flutter-displayable `detail` message — the 
 
 ## Client-side pre-check (Flutter, optional — Should-Have, not Must-Have)
 
-The original on-device-architecture plan had a Dart blur/brightness heuristic quality gate. In the new architecture this is **no longer required** (the backend validates independently either way), but it's still worth reusing if there's time: catching an obviously bad photo *before* spending an upload + inference round-trip is a nicer user experience, especially on a slow connection. See `plan.md`'s Optional Features list. If implemented, port the blur (edge-difference heuristic) and brightness checks from the earlier handbook material — the logic itself is unaffected by the architecture change, only its role changed (a UX nicety, not a safety-critical gate, since the backend is now the real validation authority).
+The original on-device-architecture plan had a Dart blur/brightness heuristic quality gate. In the new architecture this is **no longer required** (the backend validates independently either way), but it's still worth reusing if there's time: catching an obviously bad photo *before* spending an upload + inference round-trip is a nicer user experience, especially on a slow connection. See `dev/plan.md`'s Optional Features list. If implemented, port the blur (edge-difference heuristic) and brightness checks from the earlier handbook material — the logic itself is unaffected by the architecture change, only its role changed (a UX nicety, not a safety-critical gate, since the backend is now the real validation authority).
 
 ## What is explicitly NOT re-implemented from the old plan
 

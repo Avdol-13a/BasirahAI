@@ -65,7 +65,7 @@ class _BasirahAppState extends State<BasirahApp> {
 
 /// Shown instead of crashing when the app is launched without
 /// --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
-/// See lib/config/env.dart and plan.md.
+/// See lib/config/env.dart and dev/plan.md.
 class _MissingConfigScreen extends StatelessWidget {
   const _MissingConfigScreen();
 

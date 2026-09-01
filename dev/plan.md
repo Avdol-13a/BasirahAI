@@ -50,7 +50,9 @@ Full diagram and reasoning: this file's git history / conversation record, and `
 
 ```
 basirah/
-├── plan.md
+├── README.md                   # public-facing project overview
+├── dev/
+│   └── plan.md
 ├── .gitignore
 ├── docs/                      # DATASET.md, ML_PLAN.md, EVALUATION_RESULTS.md,
 │                               # IMAGE_PIPELINE.md, MEDICAL_SAFETY.md (reused as-is),

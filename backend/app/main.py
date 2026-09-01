@@ -45,7 +45,7 @@ app = FastAPI(title="BasirahAI Inference API", lifespan=lifespan)
 # Permissive during development; the mobile app doesn't rely on browser CORS
 # the way a web frontend would, but this avoids losing time to a non-issue
 # while building. Tighten before the final demo if there's time (see
-# docs/ML_PLAN.md / plan.md Day 6).
+# docs/ML_PLAN.md / dev/plan.md Day 6).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

@@ -1,6 +1,6 @@
 # ML Plan — BasirahAI
 
-> **We do not train or fine-tune any model.** This document describes how an existing pretrained checkpoint is integrated into the backend, not a training pipeline. If you're looking for training code, there isn't any — that's intentional (see the hackathon scope revision in `plan.md`'s header note).
+> **We do not train or fine-tune any model.** This document describes how an existing pretrained checkpoint is integrated into the backend, not a training pipeline. If you're looking for training code, there isn't any — that's intentional (see the hackathon scope revision in `dev/plan.md`'s header note).
 
 ## Task framing
 

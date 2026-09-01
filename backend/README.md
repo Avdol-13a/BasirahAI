@@ -1,7 +1,7 @@
 # BasirahAI Inference Backend
 
 Stateless FastAPI service that wraps a pretrained diabetic retinopathy
-screening model. See the project's `docs/ML_PLAN.md` and `plan.md` (repo
+screening model. See the project's `docs/ML_PLAN.md` and `dev/plan.md` (repo
 root) for full context — this backend does one job: validate an uploaded
 retinal photo and return a Referable / Non-Referable screening result.
 
@@ -46,7 +46,7 @@ the first screening after sleep must wait for model startup.
 
 Hugging Face Spaces (the original hosting plan) now requires a paid Pro
 plan for any Space that runs compute — confirmed dead end as of Aug 2026,
-see `plan.md`. **Azure for Students** gives $100 of credit for 12 months
+see `dev/plan.md`. **Azure for Students** gives $100 of credit for 12 months
 with **no credit card required** (verify via school email, or via the
 GitHub Student Developer Pack if the school email isn't recognized) — this
 project's real memory footprint (~550MB with the model loaded, measured

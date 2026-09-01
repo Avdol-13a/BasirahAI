@@ -1,6 +1,6 @@
 -- BasirahAI — Supabase schema
 -- Paste this into your Supabase project's SQL Editor (Dashboard → SQL Editor → New query) and run it.
--- Matches docs/DATASET.md / plan.md's data model.
+-- Matches docs/DATASET.md / dev/plan.md's data model.
 
 create table if not exists patients (
   id uuid primary key default gen_random_uuid(),

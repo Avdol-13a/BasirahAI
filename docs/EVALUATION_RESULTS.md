@@ -7,12 +7,12 @@
 1. **The model author's self-reported metrics** (from the [jdelgado2002/diabetic_retinopathy_detection](https://huggingface.co/jdelgado2002/diabetic_retinopathy_detection) model card): validation accuracy 0.840, APTOS private leaderboard score 0.869. We did not measure these ourselves and cannot vouch for the methodology behind them.
 2. **Our own independently-measured numbers** (below) — from running real sample images through our actual deployed `/screen` endpoint and scoring the results ourselves.
 
-Both belong in the demo and docs, **clearly labeled which is which** (see `docs/ML_PLAN.md`, `plan.md`'s demo honesty-close talking point).
+Both belong in the demo and docs, **clearly labeled which is which** (see `docs/ML_PLAN.md`, `dev/plan.md`'s demo honesty-close talking point).
 
 ## Our independent evaluation (Day 2)
 
 - Date: 2026-08-31
-- Backend URL/host used for this run: Railway — `https://basirahai-api-production.up.railway.app` (see `plan.md` §8 for hosting details)
+- Backend URL/host used for this run: Railway — `https://basirahai-api-production.up.railway.app` (see `dev/plan.md` §8 for hosting details)
 - Sample source: APTOS 2019 (Kaggle), `train.csv` + `train_images/` — see `docs/DATASET.md` and important caveat below
 - Sample size: 201 images, stratified proportionally to the real 5-class grade distribution across the full 3,662-image training set (seed=42; see `backend/eval_data/select_sample.py`)
 - Binary label ground truth used for scoring: grades 0-1 → Non-Referable, 2-4 → Referable (same convention the model uses)

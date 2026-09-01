@@ -62,8 +62,10 @@ The project went through **two distinct architectures**. Only the second one is 
 
 ```
 D:\Basirah\
-├── plan.md                          ← living checklist, updated most frequently
-├── HANDOFF.md                       ← this file
+├── README.md                        ← public-facing project overview
+├── dev/
+│   ├── plan.md                      ← living checklist, updated most frequently
+│   └── HANDOFF.md                   ← this file
 ├── .gitignore
 ├── docs/
 │   ├── BASIRAH_HANDBOOK.md          ← STALE — old on-device architecture, historical only
