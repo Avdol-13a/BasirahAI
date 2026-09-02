@@ -13,6 +13,7 @@ docs/MEDICAL_SAFETY.md for the wording contract the Flutter app follows
 when presenting this endpoint's output to a user.
 """
 
+import asyncio
 import io
 import logging
 import os
@@ -24,12 +25,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 
 from . import model
+from .image_checks import ImageSuitabilityError, check_image_suitability
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("basirah")
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 MIN_IMAGE_DIMENSION = 64  # reject implausibly tiny "images"
+# Decompression-bomb guard. Deliberately well below a high-end phone's raw
+# sensor resolution (e.g. 108MP) -- decoding to RGB costs ~3 bytes/pixel, so
+# a 100MP cap would let a single request's decode alone cost ~300MB against
+# a container that measures ~483MB baseline RSS on Railway's ~1GB trial
+# (dev/plan.md/HANDOFF.md's hosting history) and would blow well past
+# Render's 512MB free tier, the documented fallback host (backend/README.md)
+# -- so 40MP (~120MB worst-case decode) was chosen to leave real headroom on
+# both, while still comfortably covering ordinary phone camera output (many
+# high-megapixel sensors pixel-bin down to a much lower default output
+# resolution in practice). Tune via env var if real-device testing shows
+# genuine photos being rejected.
+MAX_IMAGE_PIXELS = int(os.getenv("MAX_IMAGE_PIXELS", str(40_000_000)))
+_UPLOAD_CHUNK_BYTES = 1024 * 1024  # 1 MB
+
+# Bounds concurrent CPU-heavy inference work on a single shared vCPU so a
+# burst of simultaneous requests can't oversubscribe the process's limited
+# RAM/CPU. No queueing: a request arriving while at capacity is rejected
+# immediately (503) rather than piling up. Cheap validation-only rejections
+# (empty/oversized/corrupt/unsuitable image) never need a slot.
+MAX_CONCURRENT_INFERENCE = int(os.getenv("MAX_CONCURRENT_INFERENCE", "1"))
+_active_inferences = 0
+_inference_lock = asyncio.Lock()
 
 
 @asynccontextmanager
@@ -59,21 +83,71 @@ def health():
     return {"status": "ok", "model_loaded": model.is_model_loaded()}
 
 
+async def _read_limited(upload: UploadFile, max_bytes: int) -> bytes:
+    """Reject an oversized upload as soon as the limit is crossed, instead of
+    reading the whole body to completion first."""
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await upload.read(_UPLOAD_CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Image is too large (max {max_bytes // (1024 * 1024)} MB).",
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+async def _reserve_inference_slot() -> bool:
+    global _active_inferences
+    async with _inference_lock:
+        if _active_inferences >= MAX_CONCURRENT_INFERENCE:
+            return False
+        _active_inferences += 1
+        return True
+
+
+async def _release_inference_slot() -> None:
+    global _active_inferences
+    async with _inference_lock:
+        _active_inferences -= 1
+
+
 @app.post("/screen")
 async def screen(image: UploadFile = File(...)):
-    raw_bytes = await image.read()
+    raw_bytes = await _read_limited(image, MAX_UPLOAD_BYTES)
 
     if len(raw_bytes) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-    if len(raw_bytes) > MAX_UPLOAD_BYTES:
+
+    try:
+        probe_image = Image.open(io.BytesIO(raw_bytes))
+        width, height = probe_image.size
+    except UnidentifiedImageError:
+        raise HTTPException(status_code=400, detail="This doesn't look like a valid image file.")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read this image file.")
+
+    # Check declared dimensions (header-only, no pixel decode yet) before
+    # doing any heavier work, so a decompression-bomb-style file is rejected
+    # before verify()/decode ever touches its pixel data.
+    if width < MIN_IMAGE_DIMENSION or height < MIN_IMAGE_DIMENSION:
         raise HTTPException(
-            status_code=413,
-            detail=f"Image is too large (max {MAX_UPLOAD_BYTES // (1024 * 1024)} MB).",
+            status_code=400,
+            detail="Image resolution is too small to analyze. Please retake the photo.",
+        )
+    if width * height > MAX_IMAGE_PIXELS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Image resolution is too large to analyze (max {MAX_IMAGE_PIXELS // 1_000_000} MP). Please retake the photo at a lower resolution.",
         )
 
     try:
-        pil_image = Image.open(io.BytesIO(raw_bytes))
-        pil_image.verify()
+        probe_image.verify()
         # verify() invalidates the file pointer/object for further use, so
         # re-open before actually using it.
         pil_image = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
@@ -82,11 +156,15 @@ async def screen(image: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read this image file.")
 
-    width, height = pil_image.size
-    if width < MIN_IMAGE_DIMENSION or height < MIN_IMAGE_DIMENSION:
+    try:
+        check_image_suitability(pil_image)
+    except ImageSuitabilityError as exc:
+        raise HTTPException(status_code=400, detail={"code": exc.code, "message": exc.message})
+
+    if not await _reserve_inference_slot():
         raise HTTPException(
-            status_code=400,
-            detail="Image resolution is too small to analyze. Please retake the photo.",
+            status_code=503,
+            detail="The server is busy processing another screening. Please try again in a moment.",
         )
 
     # delete=False + manual cleanup: NamedTemporaryFile(delete=True) holds an
@@ -105,5 +183,6 @@ async def screen(image: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="Screening failed on the server. Please try again.")
     finally:
         os.unlink(tmp_path)
+        await _release_inference_slot()
 
     return result

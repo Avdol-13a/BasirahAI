@@ -116,8 +116,22 @@ basirah/
 - [x] Urdu/RTL localization — `flutter_localizations` + `intl`, ARB-based (`app/lib/l10n/app_en.arb`, `app_ur.arb`, gen-l10n via `app/l10n.yaml`). All 7 screens fully localized, including backend-error messages (`InferenceException` now carries an `InferenceErrorCode` enum instead of hardcoded English so the UI layer picks the localized string; the backend's own `detail` field, when present, stays English since the backend itself doesn't localize — documented in `inference_service.dart`). App-wide language toggle (`lib/widgets/language_toggle_button.dart`) on the Login and Patients screens, in-memory only (resets to English on cold start — no `shared_preferences` dependency added, to avoid another potential Windows-Developer-Mode build blocker; a reasonable trade-off for the hackathon timeline, revisit if there's time). Verified visually on the emulator in both languages: RTL mirroring correct throughout (directional icons flipped via `Transform.flip` — `Icon`'s `matchTextDirection` doesn't actually exist, don't reach for it again; `Positioned`/`Padding` use `*Directional` variants), and one real bidi bug found and fixed — a raw LTR timestamp with an internal space was getting visually reordered when embedded in Urdu text; fixed with U+200E LRM marks (`patient_detail_screen.dart`).
 - [x] Full manual test pass
 - [x] Release APK built and verified on a real phone over real mobile data (2026-09-01) — found and fixed a real release-only bug along the way (see Troubleshooting Notes): the release APK was missing `android.permission.INTERNET` entirely, causing every Supabase call to fail with a raw `SocketException: Failed host lookup`. Login, patient list, screening capture → Railway inference → result → history save, and the EN/UR toggle all verified working on a real Android phone (Realme RMX5303) over real mobile LTE data after the fix.
-- [ ] `docs/DATASET.md`, `docs/ML_PLAN.md`, `docs/EVALUATION_RESULTS.md`, `docs/IMAGE_PIPELINE.md` rewritten for this architecture
+- [x] `docs/DATASET.md`, `docs/ML_PLAN.md`, `docs/EVALUATION_RESULTS.md`, `docs/IMAGE_PIPELINE.md` rewritten for this architecture — done in commit `9781daa` (2026-08-31); checkbox had just never been ticked
 - [ ] Demo rehearsed
+
+## Hardening pass (2026-09-02)
+
+A one-day reliability/safety/security audit was run against the working MVP without redesigning it. Full details: the session's own final report (not committed as a repo doc — see git log around this date for the exact commit if reconstructing later). Summary of what changed:
+
+- **Binary classification fix:** `referable` is now decided from the model's *aggregated* binary probability mass (`probs[2:5]` vs `probs[0:2]`), not from whether the single-class argmax (`raw_grade`) happens to land on the referable side — these can disagree. See `docs/ML_PLAN.md`.
+- **New image-suitability checks** (`backend/app/image_checks.py`): aspect ratio, exposure, blur — Pillow/numpy only, no new dependencies, no memory increase. A fundus-shape heuristic exists but defaults off (unvalidated). See `docs/IMAGE_PIPELINE.md`.
+- **Backend hardening:** bounded upload reads, a decompression-bomb pixel-count guard, and a concurrency cap (`MAX_CONCURRENT_INFERENCE`) returning 503 when busy.
+- **Idempotent result saving:** each screening now gets a client-generated UUID (`app/lib/utils/uuid.dart`) and saves via `upsert`, plus a Retry Save action in the UI.
+- **26 backend + 30 Flutter tests added**, all passing locally; a GitHub Actions CI workflow added (`.github/workflows/ci.yml`) — mocks model inference, never downloads the real checkpoint.
+- **`supabase/migrations/0001_harden_screenings.sql` applied to the live project 2026-09-02** ("Success. No rows returned" in the SQL Editor). Adds CHECK constraints (confidence/raw_grade ranges, gender enum) and closes a real cross-user authorization gap in the `screenings` RLS policy (it previously didn't verify that `patient_id` belonged to the same user as `owner_user_id`) — that gap is now closed on the live project.
+- CNIC collection reviewed and documented (`docs/DATASET.md`) — left in place (already optional), recommendation only.
+- **Real-device regression pass (2026-09-02, Realme RMX5303):** login, patient creation, gallery-selected valid screening, unsuitable-image rejection (EN + UR), result save, save-retry (verified idempotent — no duplicate row after a forced-failure-then-retry), history refresh, and the Urdu/RTL toggle all confirmed working against a local instance of the hardened backend (mocked model, `adb reverse` tunnel — Railway itself still runs the pre-hardening code until redeployed). Camera capture and a true Railway cold-start weren't exercised (see below). Found one real, pre-existing bug unrelated to this pass: the screening-history card in `patient_detail_screen.dart` overflows by ~4px whenever confidence is a 3-digit value like "100%" (a Column inside a Row without Expanded/Flexible) — not yet fixed, flagged for a decision.
+- `dart format` found the pre-existing codebase was never run through the formatter (not something this pass caused or fixed — reformatting it wholesale was judged out of scope/too large a diff). CI's format step is advisory, not blocking, for this reason.
 
 ## Critical Path (in order — everything else is negotiable)
 
@@ -155,12 +169,12 @@ If time runs out, everything below "Optional Features" is cut before anything on
 
 ## Deployment Checklist
 
-- [ ] Backend Docker image builds and runs correctly (`docker build` + `docker run` locally as a final check)
+- [~] Backend Docker image builds and runs correctly (`docker build` + `docker run` locally as a final check) — not directly verifiable on this dev machine (no local Docker install); considered covered in practice since Railway builds and runs this exact `Dockerfile` in production and it's been verified live and working end-to-end — revisit only if a Docker-specific bug is suspected
 - [x] Backend deployed to Railway, publicly reachable over HTTPS
-- [x] `/health` returns `model_loaded: true` on the deployed instance
-- [ ] Supabase schema + RLS policies applied on the real project (not just planned)
+- [x] `/health` returns `model_loaded: true` on the deployed instance — reverified 2026-09-02, still up (`{"status":"ok","model_loaded":true}`, ~3.4s response — a cold-start wake, not a fully warm hit)
+- [x] Supabase schema + RLS policies applied on the real project (not just planned) — done earlier, see HANDOFF.md §6/§10; checkbox had just never been ticked
 - [x] Flutter release APK built (`flutter build apk --release`), installs standalone on a phone — verified 2026-09-01 on a real Realme RMX5303 over real mobile data
-- [ ] No secrets, no `.venv`, no dataset redistribution committed to the public GitHub repo
+- [x] No secrets, no `.venv`, no dataset redistribution committed to the public GitHub repo — reverified 2026-09-02: `git ls-files` shows no `.venv`, `.env`, dataset images, `.pkl`, or APK files tracked; `.gitignore` covers all of them; the only `SUPABASE_ANON_KEY` string in history is a placeholder (`eyJ...`) inside a doc comment, not a real key
 
 ## Final Demo Checklist
 

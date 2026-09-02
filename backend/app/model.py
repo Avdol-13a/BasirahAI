@@ -18,6 +18,7 @@ MODEL_REPO_ID = "jdelgado2002/diabetic_retinopathy_detection"
 MODEL_STATE_PATH = Path(os.getenv("MODEL_STATE_PATH", "/model/basirah_resnet50_state.pt"))
 
 NON_REFERABLE_GRADES = {0, 1}
+REFERABLE_GRADES = {2, 3, 4}
 GRADE_LABELS = {
     0: "No DR",
     1: "Mild",
@@ -140,13 +141,21 @@ def predict(image_path: str) -> dict:
     with torch.inference_mode():
         probs = torch.softmax(_model(tensor)[0], dim=0)
 
+    # raw_grade/raw_grade_label are purely informational (the single most
+    # likely grade). The binary referable/confidence call is decided
+    # independently, from the *aggregated* probability mass on each side of
+    # the clinical cut point — not from whether raw_grade happens to fall on
+    # that side. These can disagree: e.g. probs [.05, .30, .28, .22, .15] has
+    # raw_grade=1 ("Mild", the single largest class) while the referable
+    # side's summed mass (.28+.22+.15=.65) exceeds the non-referable side's
+    # (.05+.30=.35) — aggregated mass is the more defensible signal for a
+    # binary screening call than a single-class plurality vote, so it wins.
     raw_grade = int(probs.argmax().item())
     probs_list = [float(probability) for probability in probs]
-    referable = raw_grade not in NON_REFERABLE_GRADES
-    winning_grades = (
-        set(GRADE_LABELS) - NON_REFERABLE_GRADES if referable else NON_REFERABLE_GRADES
-    )
-    confidence = sum(probs_list[index] for index in winning_grades)
+    non_referable_probability = sum(probs_list[index] for index in NON_REFERABLE_GRADES)
+    referable_probability = sum(probs_list[index] for index in REFERABLE_GRADES)
+    referable = referable_probability >= non_referable_probability
+    confidence = referable_probability if referable else non_referable_probability
 
     return {
         "referable": referable,

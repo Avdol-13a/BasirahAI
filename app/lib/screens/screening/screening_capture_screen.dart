@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/inference_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/uuid.dart';
 import 'result_screen.dart';
 
 class ScreeningCaptureScreen extends StatefulWidget {
@@ -51,7 +52,11 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => ResultScreen(patientId: widget.patientId, result: result),
+          builder: (_) => ResultScreen(
+            patientId: widget.patientId,
+            result: result,
+            screeningId: generateUuidV4(),
+          ),
         ),
       );
     } on InferenceException catch (e) {
@@ -74,8 +79,31 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
         // The backend's own `detail` message is always English (see
         // InferenceException docs) — shown as-is when present.
         return e.detail ?? l10n.serverErrorMsg;
+      case InferenceErrorCode.imageUnsuitable:
+        // Localize by the backend's stable code when recognized, so a
+        // future backend-only check doesn't need an app update to read
+        // sensibly — an unknown code falls back to the backend's own
+        // (English) message, then a generic one.
+        return _imageIssueMessage(l10n, e.imageIssueCode) ?? e.detail ?? l10n.serverErrorMsg;
       case InferenceErrorCode.generic:
         return l10n.genericInferenceErrorMsg;
+    }
+  }
+
+  String? _imageIssueMessage(AppLocalizations l10n, String? code) {
+    switch (code) {
+      case 'bad_aspect_ratio':
+        return l10n.imageBadAspectRatioMsg;
+      case 'too_dark':
+        return l10n.imageTooDarkMsg;
+      case 'too_bright':
+        return l10n.imageTooBrightMsg;
+      case 'too_blurry':
+        return l10n.imageTooBlurryMsg;
+      case 'not_fundus_like':
+        return l10n.imageNotFundusLikeMsg;
+      default:
+        return null;
     }
   }
 
@@ -89,6 +117,12 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text(
+              l10n.captureGuidanceMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.inkMuted, fontSize: 12.5, height: 1.4),
+            ),
+            const SizedBox(height: 14),
             if (_selectedImage != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(22),

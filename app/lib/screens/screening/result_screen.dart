@@ -8,8 +8,14 @@ import '../../theme/app_theme.dart';
 class ResultScreen extends StatefulWidget {
   final String patientId;
   final ScreeningResult result;
+  final String screeningId;
 
-  const ResultScreen({super.key, required this.patientId, required this.result});
+  const ResultScreen({
+    super.key,
+    required this.patientId,
+    required this.result,
+    required this.screeningId,
+  });
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -33,14 +39,19 @@ class _ResultScreenState extends State<ResultScreen> {
     });
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
-      await Supabase.instance.client.from('screenings').insert({
+      // upsert on the client-generated id (see ScreeningCaptureScreen,
+      // generateUuidV4()) makes a retry after a failed/uncertain save
+      // idempotent — re-sending the same id updates the same row instead
+      // of risking a duplicate history entry.
+      await Supabase.instance.client.from('screenings').upsert({
+        'id': widget.screeningId,
         'patient_id': widget.patientId,
         'owner_user_id': userId,
         'referable': widget.result.referable,
         'confidence': widget.result.confidence,
         'raw_grade': widget.result.rawGrade,
         'raw_grade_label': widget.result.rawGradeLabel,
-      });
+      }, onConflict: 'id');
       setState(() => _isSaved = true);
     } catch (e) {
       if (mounted) {
@@ -131,14 +142,27 @@ class _ResultScreenState extends State<ResultScreen> {
             const SizedBox(height: 14),
             if (_isSaving)
               const Center(child: SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)))
-            else if (_saveError != null)
-              Text(_saveError!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.danger, fontSize: 12))
-            else if (_isSaved)
+            else if (_saveError != null) ...[
+              Text(_saveError!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+              const SizedBox(height: 6),
+              TextButton(
+                // Disabled while a save is in flight — guards against a
+                // double tap re-firing an overlapping upsert.
+                onPressed: _isSaving ? null : _saveScreening,
+                child: Text(l10n.retrySaveButton),
+              ),
+            ] else if (_isSaved)
               Text(l10n.savedToHistory, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkFaint, fontSize: 12)),
             const SizedBox(height: 24),
             ElevatedButton(
               // ScreeningCaptureScreen pushed this screen via pushReplacement,
               // so a single pop here returns straight to PatientDetailScreen.
+              // Deliberately left enabled even while a save is in flight —
+              // the screening result itself is already final and shown
+              // regardless of save status, the save uses mounted-guarded
+              // setState so leaving mid-save can't crash, and PatientDetail's
+              // RouteAware reload (didPopNext) simply won't see this
+              // particular row yet if the user leaves before it finishes.
               onPressed: () => Navigator.of(context).pop(),
               child: Text(l10n.doneButton),
             ),

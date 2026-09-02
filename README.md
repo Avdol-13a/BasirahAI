@@ -83,6 +83,22 @@ flutter build apk --release \
   --dart-define=SUPABASE_ANON_KEY=<your-supabase-anon-key>
 ```
 
+### Running the tests
+
+```bash
+# Backend — mocks model loading/inference, no checkpoint download needed
+cd backend && source .venv/Scripts/activate
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest tests/ -v
+
+# Flutter
+cd app
+flutter analyze
+flutter test
+```
+
+The same commands run in CI on every push/PR — see `.github/workflows/ci.yml`.
+
 ## Project Structure
 
 ```

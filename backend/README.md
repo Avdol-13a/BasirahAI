@@ -7,6 +7,17 @@ retinal photo and return a Referable / Non-Referable screening result.
 
 This is a screening/decision-support signal, not a medical diagnosis.
 
+> **Deployment status (2026-09-02):** this service is **currently live on
+> Railway** at `https://basirahai-api-production.up.railway.app` (see
+> `dev/plan.md` §Hosting). The Azure and Render sections below are the
+> exploration that happened before Railway became the working option —
+> Azure for Students verification never cleared in time and is no longer on
+> the critical path; Render's free tier is a real, currently-viable fallback
+> now that the optimized runtime fits under its 512MB limit, but switching
+> to it wasn't pursued once Railway was already live and working. Both
+> sections are kept as real, reusable instructions in case either is
+> revisited later, not as the current plan.
+
 ## Endpoints
 
 - `GET /health` — `{"status": "ok", "model_loaded": true}`
@@ -93,3 +104,19 @@ source .venv/Scripts/activate   # Windows Git Bash; use .venv/bin/activate on Li
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
+
+## Testing
+
+Tests mock model loading/inference (`tests/conftest.py`) — they never
+download or load the real checkpoint, so no Hugging Face Hub access or GPU
+is needed, just the CPU torch/torchvision wheels already required at
+runtime:
+
+```bash
+source .venv/Scripts/activate   # or .venv/bin/activate on Linux/Mac
+pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest tests/ -v
+```
+
+The same commands run in CI — see `.github/workflows/ci.yml`.

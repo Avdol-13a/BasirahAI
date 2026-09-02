@@ -35,16 +35,21 @@ Implemented in `backend/app/model.py`. Three real issues were hit and fixed whil
 
 All four are implemented and verified working locally (model loads, `predict()` returns a valid 5-class probability distribution summing to 1.0).
 
-## Confidence score derivation
+## Binary referable call and confidence derivation
 
-The model's raw softmax gives 5 probabilities. The backend's `confidence` field is **not** just the top class's probability — it's the summed probability mass on the winning side of the binary split:
+**Updated 2026-09-02** — `referable` is decided independently from `raw_grade`, not derived from it. The model's raw softmax gives 5 class probabilities; `raw_grade` (the single most likely class) and the binary `referable` call are two separate signals that can disagree:
 
 ```
-referable = raw_grade in {2, 3, 4}
-confidence = sum(probs[2:]) if referable else sum(probs[0:2])
+non_referable_probability = probs[0] + probs[1]
+referable_probability = probs[2] + probs[3] + probs[4]
+referable = referable_probability >= non_referable_probability
+confidence = referable_probability if referable else non_referable_probability
+raw_grade = argmax(probs)  # informational only, unaffected by the line above
 ```
 
-This better represents "how sure is the binary screening call" than a raw single-class probability would.
+**Why aggregate mass instead of "is raw_grade in {2,3,4}":** the earlier implementation derived `referable` from whether the single-class argmax fell on the referable side, which can disagree with which side actually has more aggregate probability mass. Example: `probs = [0.05, 0.30, 0.28, 0.22, 0.15]` — `raw_grade` is 1 ("Mild", the largest single class), but the referable side's summed mass (0.28+0.22+0.15=0.65) exceeds the non-referable side's (0.05+0.30=0.35). Aggregated mass is the more defensible signal for a binary screening call than a single-class plurality vote, so it wins; `raw_grade`/`raw_grade_label` are still reported, but purely as informational detail, not as the source of truth for the referable/non-referable call. See `backend/app/model.py`'s `predict()` and `backend/tests/test_model.py::test_predict_argmax_and_aggregate_disagree` for a worked test case of this disagreement.
+
+An exact tie between the two sides resolves to referable (the `>=`), the more sensitive/conservative choice for a screening tool.
 
 ## Low-confidence cutoff
 

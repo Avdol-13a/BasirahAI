@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend-tests:
+    name: Backend tests (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install backend dependencies (CPU-only torch, matches Dockerfile)
+        working-directory: backend
+        run: |
+          pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+      # No model weights are downloaded or loaded here -- tests mock
+      # model.load_model()/predict() (backend/tests/conftest.py) so CI never
+      # needs the real ~100MB checkpoint or a Hugging Face Hub fetch.
+      - name: Run pytest
+        working-directory: backend
+        run: python -m pytest tests/ -v
+
+  flutter-checks:
+    name: Flutter analyze, format, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.2"
+          channel: stable
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+      - name: flutter analyze
+        working-directory: app
+        run: flutter analyze
+      - name: dart format check (advisory)
+        working-directory: app
+        # Advisory, not blocking: the existing codebase predates any
+        # `dart format` pass and reformatting it wholesale is a large,
+        # purely-stylistic diff outside a hardening pass's scope (see
+        # dev/HANDOFF.md). Reporting rather than failing here avoids a
+        # permanently-red CI badge for a pre-existing, unrelated condition.
+        run: dart format --output=none lib test || true
+      - name: flutter test
+        working-directory: app
+        run: flutter test

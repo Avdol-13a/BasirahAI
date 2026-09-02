@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import '../config/env.dart';
 
 class ScreeningResult {
@@ -29,17 +30,33 @@ class ScreeningResult {
 /// layer (which has a BuildContext, and localizes) picks the message —
 /// see docs/MEDICAL_SAFETY.md / docs/IMAGE_PIPELINE.md for the wording
 /// contract each category follows.
-enum InferenceErrorCode { connection, slowConnection, serverStarting, serverError, generic }
+enum InferenceErrorCode {
+  connection,
+  slowConnection,
+  serverStarting,
+  serverError,
+  imageUnsuitable,
+  generic,
+}
 
 /// Thrown for any failure calling the inference backend. [detail], when
 /// present, is a specific, user-safe message the backend itself returned
 /// (validation errors — bad file, too large, corrupt, etc.; see
 /// backend/app/main.py) and is always in English, since the backend does
 /// not localize — the UI falls back to [code]'s localized message otherwise.
+///
+/// [imageIssueCode] is set only for [InferenceErrorCode.imageUnsuitable]: a
+/// stable, machine-readable code (e.g. "too_dark", "too_blurry" — see
+/// backend/app/image_checks.py) the UI maps to its own localized string via
+/// [imageIssueCode], rather than displaying [detail]'s English text
+/// directly. An unrecognized code (e.g. after a backend-only update adds a
+/// new check) falls back to [detail] or a generic message — see
+/// ScreeningCaptureScreen._messageFor.
 class InferenceException implements Exception {
   final InferenceErrorCode code;
   final String? detail;
-  InferenceException(this.code, {this.detail});
+  final String? imageIssueCode;
+  InferenceException(this.code, {this.detail, this.imageIssueCode});
 }
 
 class InferenceService {
@@ -68,24 +85,37 @@ class InferenceService {
 
       return ScreeningResult.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      throw _exceptionFor(e);
+      throw mapDioExceptionToInferenceException(e);
     }
   }
+}
 
-  InferenceException _exceptionFor(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionError:
-        return InferenceException(InferenceErrorCode.connection);
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-        return InferenceException(InferenceErrorCode.slowConnection);
-      case DioExceptionType.receiveTimeout:
-        return InferenceException(InferenceErrorCode.serverStarting);
-      case DioExceptionType.badResponse:
-        final detail = e.response?.data is Map ? e.response?.data['detail'] : null;
-        return InferenceException(InferenceErrorCode.serverError, detail: detail is String ? detail : null);
-      default:
-        return InferenceException(InferenceErrorCode.generic);
-    }
+/// Maps a Dio failure to an [InferenceException]. A top-level function
+/// (rather than a private method) so tests can exercise every mapping
+/// directly with a synthetic [DioException], without a real/mocked network
+/// call.
+@visibleForTesting
+InferenceException mapDioExceptionToInferenceException(DioException e) {
+  switch (e.type) {
+    case DioExceptionType.connectionError:
+      return InferenceException(InferenceErrorCode.connection);
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+      return InferenceException(InferenceErrorCode.slowConnection);
+    case DioExceptionType.receiveTimeout:
+      return InferenceException(InferenceErrorCode.serverStarting);
+    case DioExceptionType.badResponse:
+      final data = e.response?.data;
+      final detail = data is Map ? data['detail'] : null;
+      if (detail is Map && detail['code'] is String) {
+        return InferenceException(
+          InferenceErrorCode.imageUnsuitable,
+          detail: detail['message'] is String ? detail['message'] as String : null,
+          imageIssueCode: detail['code'] as String,
+        );
+      }
+      return InferenceException(InferenceErrorCode.serverError, detail: detail is String ? detail : null);
+    default:
+      return InferenceException(InferenceErrorCode.generic);
   }
 }

@@ -61,6 +61,7 @@
   "analyzeButton": "Analyze",
   "uploadingMessage": "Uploading and analyzing...",
   "retryButton": "Retry",
+  "captureGuidanceMessage": "Capture or select a clear retinal fundus photo only. Blurry, very dark/bright, or non-fundus photos will be rejected — please retake if that happens.",
 
   "resultTitle": "Screening Result",
   "nonReferableHeadline": "No Urgent Concern Found",
@@ -76,11 +77,17 @@
   "safetyDisclaimer": "BasirahAI is a screening aid, not a diagnosis. It has not been clinically validated. Always follow up with a qualified eye-care professional.",
   "savedToHistory": "Saved to patient history",
   "saveResultError": "This result wasn't saved to history — check your connection. The screening itself is still valid.",
+  "retrySaveButton": "Retry Save",
   "doneButton": "Done",
 
   "connectionErrorMsg": "Couldn't reach the server. Check your internet connection and try again.",
   "slowConnectionMsg": "The connection is too slow right now. Please try again.",
   "serverStartingMsg": "The server is taking too long to respond (it may be starting up after being idle). Please try again in a moment.",
   "serverErrorMsg": "Something went wrong on the server. Please try again.",
+  "imageBadAspectRatioMsg": "This image's shape doesn't look like a photo. Please retake the photo.",
+  "imageTooDarkMsg": "This photo looks too dark to analyze. Please retake it in better lighting.",
+  "imageTooBrightMsg": "This photo looks overexposed to analyze. Please retake the photo.",
+  "imageTooBlurryMsg": "This photo looks too blurry to analyze. Please hold the camera steady and retake it.",
+  "imageNotFundusLikeMsg": "This doesn't look like a retinal fundus photo. Please capture a fundus image.",
   "genericInferenceErrorMsg": "Something went wrong. Please try again."
 }
