@@ -77,17 +77,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Center(
-                        child: Container(
-                          width: 76,
-                          height: 76,
-                          decoration: BoxDecoration(
-                            color: colors.accentSoft,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Icon(
-                            Icons.remove_red_eye_outlined,
-                            size: 36,
-                            color: colors.accentSoftInk,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: Image.asset(
+                            'assets/branding/basirah_logo.png',
+                            width: 76,
+                            height: 76,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),

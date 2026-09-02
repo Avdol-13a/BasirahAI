@@ -9,9 +9,10 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 **This is a screening/decision-support aid, not a diagnosis.** Every result says so, on-screen, every time.
 
 <p align="center">
-  <img src="docs/screenshots/login.png" width="260" alt="Login screen">
-  <img src="docs/screenshots/result.png" width="260" alt="Screening result screen">
-  <img src="docs/screenshots/urdu.png" width="260" alt="Urdu/RTL patient list">
+  <img src="docs/screenshots/login.png" width="220" alt="Login screen">
+  <img src="docs/screenshots/result.png" width="220" alt="Referable screening result">
+  <img src="docs/screenshots/result_non_referable.png" width="220" alt="Non-referable screening result">
+  <img src="docs/screenshots/urdu.png" width="220" alt="Urdu/RTL patient list">
 </p>
 
 ## Features
@@ -27,7 +28,7 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 
 ## Screenshots
 
-All three screenshots above were captured from a real Android phone running the release build over real mobile data, not the emulator.
+Captured 2026-09-02 from the release build against the live Railway backend and the real Supabase project — the login and result screens on the Android emulator, the Urdu/RTL patient list likewise. The referable and non-referable results are genuine `/screen` responses for two real APTOS sample images, not mocked data.
 
 ## Architecture
 

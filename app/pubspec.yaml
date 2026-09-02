@@ -77,6 +77,9 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
+  assets:
+    - assets/branding/basirah_logo.png
+
   # Lora and Manrope, both variable fonts (SIL Open Font License), from
   # https://github.com/google/fonts/tree/main/ofl — bundled locally rather
   # than fetched at runtime (see google_fonts package) because that package's
