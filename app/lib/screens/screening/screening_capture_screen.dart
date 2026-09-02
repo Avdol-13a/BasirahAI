@@ -1,6 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../../services/inference_service.dart';
 import '../../theme/app_theme.dart';
@@ -84,7 +86,9 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
         // future backend-only check doesn't need an app update to read
         // sensibly — an unknown code falls back to the backend's own
         // (English) message, then a generic one.
-        return _imageIssueMessage(l10n, e.imageIssueCode) ?? e.detail ?? l10n.serverErrorMsg;
+        return _imageIssueMessage(l10n, e.imageIssueCode) ??
+            e.detail ??
+            l10n.serverErrorMsg;
       case InferenceErrorCode.generic:
         return l10n.genericInferenceErrorMsg;
     }
@@ -110,6 +114,7 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newScreeningButton)),
       body: Padding(
@@ -120,25 +125,38 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
             Text(
               l10n.captureGuidanceMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.inkMuted, fontSize: 12.5, height: 1.4),
+              style: TextStyle(
+                color: colors.inkMuted,
+                fontSize: 12.5,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 14),
             if (_selectedImage != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(22),
-                child: Image.file(_selectedImage!, height: 240, width: double.infinity, fit: BoxFit.cover),
+                child: Image.file(
+                  _selectedImage!,
+                  height: 240,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               )
             else
               Container(
                 height: 240,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
+                  color: colors.surfaceAlt,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: colors.border),
                 ),
-                child: const Center(
-                  child: Icon(Icons.remove_red_eye_outlined, size: 52, color: AppColors.inkFaint),
+                child: Center(
+                  child: Icon(
+                    Icons.remove_red_eye_outlined,
+                    size: 52,
+                    color: colors.inkFaint,
+                  ),
                 ),
               ),
             const SizedBox(height: 22),
@@ -146,7 +164,9 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isUploading ? null : () => _pickImage(ImageSource.camera),
+                    onPressed: _isUploading
+                        ? null
+                        : () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt_outlined, size: 18),
                     label: Text(l10n.cameraButton),
                   ),
@@ -154,7 +174,9 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isUploading ? null : () => _pickImage(ImageSource.gallery),
+                    onPressed: _isUploading
+                        ? null
+                        : () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library_outlined, size: 18),
                     label: Text(l10n.galleryButton),
                   ),
@@ -167,16 +189,23 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: _uploadProgress > 0 ? _uploadProgress : null,
-                  backgroundColor: AppColors.border,
-                  color: AppColors.accent,
+                  backgroundColor: colors.border,
+                  color: colors.accent,
                 ),
               ),
               const SizedBox(height: 8),
-              Text(l10n.uploadingMessage, style: const TextStyle(color: AppColors.inkMuted)),
+              Text(
+                l10n.uploadingMessage,
+                style: TextStyle(color: colors.inkMuted),
+              ),
               const SizedBox(height: 16),
             ],
             if (_errorMessage != null) ...[
-              Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.danger)),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.danger),
+              ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: _isUploading ? null : _analyze,
@@ -184,7 +213,9 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
               ),
             ],
             AccentButton(
-              onPressed: (_selectedImage == null || _isUploading) ? null : _analyze,
+              onPressed: (_selectedImage == null || _isUploading)
+                  ? null
+                  : _analyze,
               child: Text(l10n.analyzeButton),
             ),
           ],

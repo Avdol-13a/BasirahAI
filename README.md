@@ -18,9 +18,11 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 
 - **Authenticated accounts** with patient records (name, DOB, gender, optional CNIC/phone)
 - **Screening capture** — camera or gallery upload, with upload-progress feedback and graceful handling of weak/interrupted connections
-- **Real AI inference** — an existing, pretrained diabetic-retinopathy model (not trained by us, not a mock) returns a binary Referable/Non-Referable call plus a confidence score
-- **Screening history** per patient, with retry-safe UI and immediate refresh after a new screening
+- **Image suitability checks** — the backend rejects clearly unusable photos (wrong aspect ratio, too dark/bright, too blurry) before spending an inference call on them, with a specific, localized message for each rejection reason
+- **Real AI inference** — an existing, pretrained diabetic-retinopathy model (not trained by us, not a mock) returns a binary Referable/Non-Referable call — decided from the model's aggregated binary probability mass, not a single-class vote — plus a confidence score
+- **Reliable screening history** — each screening save is idempotent (a client-generated id + upsert), so a failed save can be retried from the result screen without ever creating a duplicate history entry; the list refreshes immediately after a new screening
 - **English + Urdu**, including correct RTL mirroring, bidi-safe timestamps, and a persistent language toggle
+- **Light, dark, and system themes** — Material 3 throughout, user-selectable from the app bar and persisted across restarts
 - **Honest safety messaging** — confidence is always shown as "how sure this specific result is," never conflated with clinical accuracy; known limitations are disclosed rather than hidden
 
 ## Screenshots
@@ -45,10 +47,11 @@ The backend does one job — validate an image and return a screening result. It
 | Mobile app | Flutter (Dart), Android |
 | HTTP client | `dio` (upload progress) |
 | Auth / DB | Supabase (Postgres + Auth), via `supabase_flutter`, Row-Level Security |
-| Inference backend | FastAPI (Python), Dockerized, one endpoint (`/screen`) |
+| Inference backend | FastAPI (Python), Dockerized, one endpoint (`/screen`), with image-suitability validation and a concurrency guard |
 | Model | [jdelgado2002/diabetic_retinopathy_detection](https://huggingface.co/jdelgado2002/diabetic_retinopathy_detection) — ResNet-50 via fastai, MIT license, trained on APTOS 2019 |
 | Hosting | Railway (Docker) |
 | Localization | `flutter_localizations` + `intl`, ARB files |
+| Theming | Material 3, light/dark/system via `ThemeMode`, choice persisted with `shared_preferences` |
 
 No on-device inference, no self-training — the phone never runs the model. See [`docs/ML_PLAN.md`](docs/ML_PLAN.md) for the model choice and licensing rationale.
 
@@ -104,7 +107,7 @@ The same commands run in CI on every push/PR — see `.github/workflows/ci.yml`.
 ```
 ├── app/          Flutter mobile app
 ├── backend/      FastAPI inference service
-├── supabase/     Postgres schema + Row-Level Security policies
+├── supabase/     Postgres schema, Row-Level Security policies, and migrations
 └── docs/         Model provenance, evaluation results, safety copy, image pipeline spec
 ```
 

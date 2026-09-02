@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../../models/result_category.dart';
 import '../../services/inference_service.dart';
@@ -55,7 +56,9 @@ class _ResultScreenState extends State<ResultScreen> {
       setState(() => _isSaved = true);
     } catch (e) {
       if (mounted) {
-        setState(() => _saveError = AppLocalizations.of(context).saveResultError);
+        setState(
+          () => _saveError = AppLocalizations.of(context).saveResultError,
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -64,28 +67,29 @@ class _ResultScreenState extends State<ResultScreen> {
 
   _ResultContent _contentFor(BuildContext context, ResultCategory category) {
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
     switch (category) {
       case ResultCategory.nonReferable:
         return _ResultContent(
           icon: Icons.check_circle_outline,
-          color: AppColors.success,
-          badgeBg: AppColors.successSoft,
+          color: colors.success,
+          badgeBg: colors.successSoft,
           headline: l10n.nonReferableHeadline,
           message: l10n.nonReferableMessage,
         );
       case ResultCategory.referable:
         return _ResultContent(
           icon: Icons.warning_amber_rounded,
-          color: AppColors.danger,
-          badgeBg: AppColors.dangerSoft,
+          color: colors.danger,
+          badgeBg: colors.dangerSoft,
           headline: l10n.referableHeadline,
           message: l10n.referableMessage,
         );
       case ResultCategory.lowConfidence:
         return _ResultContent(
           icon: Icons.help_outline,
-          color: AppColors.neutral,
-          badgeBg: AppColors.neutralSoft,
+          color: colors.neutral,
+          badgeBg: colors.neutralSoft,
           headline: l10n.lowConfidenceHeadline,
           message: l10n.lowConfidenceMessage,
         );
@@ -95,6 +99,7 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
     final category = ResultCategorizer.categorize(widget.result);
     final content = _contentFor(context, category);
 
@@ -110,40 +115,83 @@ class _ResultScreenState extends State<ResultScreen> {
               child: Container(
                 width: 84,
                 height: 84,
-                decoration: BoxDecoration(color: content.badgeBg, borderRadius: BorderRadius.circular(28)),
+                decoration: BoxDecoration(
+                  color: content.badgeBg,
+                  borderRadius: BorderRadius.circular(28),
+                ),
                 child: Icon(content.icon, size: 38, color: content.color),
               ),
             ),
             const SizedBox(height: 18),
-            Text(content.headline, style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+            Text(
+              content.headline,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 16),
-            Text(content.message, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkMuted, height: 1.5)),
+            Text(
+              content.message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.inkMuted, height: 1.5),
+            ),
             const SizedBox(height: 16),
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(color: content.badgeBg, borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: content.badgeBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Text(
-                  l10n.confidencePercent((widget.result.confidence * 100).toStringAsFixed(0)),
-                  style: TextStyle(color: content.color, fontWeight: FontWeight.w700, fontSize: 13),
+                  l10n.confidencePercent(
+                    (widget.result.confidence * 100).toStringAsFixed(0),
+                  ),
+                  style: TextStyle(
+                    color: content.color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                color: colors.surfaceAlt,
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Text(
                 l10n.safetyDisclaimer,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, color: AppColors.inkMuted, height: 1.5),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colors.inkMuted,
+                  height: 1.5,
+                ),
               ),
             ),
             const SizedBox(height: 14),
             if (_isSaving)
-              const Center(child: SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)))
+              Center(
+                child: SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colors.primary,
+                  ),
+                ),
+              )
             else if (_saveError != null) ...[
-              Text(_saveError!, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+              Text(
+                _saveError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.danger, fontSize: 12),
+              ),
               const SizedBox(height: 6),
               TextButton(
                 // Disabled while a save is in flight — guards against a
@@ -152,7 +200,11 @@ class _ResultScreenState extends State<ResultScreen> {
                 child: Text(l10n.retrySaveButton),
               ),
             ] else if (_isSaved)
-              Text(l10n.savedToHistory, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.inkFaint, fontSize: 12)),
+              Text(
+                l10n.savedToHistory,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.inkFaint, fontSize: 12),
+              ),
             const SizedBox(height: 24),
             ElevatedButton(
               // ScreeningCaptureScreen pushed this screen via pushReplacement,
@@ -180,5 +232,11 @@ class _ResultContent {
   final String headline;
   final String message;
 
-  _ResultContent({required this.icon, required this.color, required this.badgeBg, required this.headline, required this.message});
+  _ResultContent({
+    required this.icon,
+    required this.color,
+    required this.badgeBg,
+    required this.headline,
+    required this.message,
+  });
 }

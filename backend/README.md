@@ -8,8 +8,14 @@ retinal photo and return a Referable / Non-Referable screening result.
 This is a screening/decision-support signal, not a medical diagnosis.
 
 > **Deployment status (2026-09-02):** this service is **currently live on
-> Railway** at `https://basirahai-api-production.up.railway.app` (see
-> `dev/plan.md` §Hosting). The Azure and Render sections below are the
+> Railway** at `https://basirahai-api-production.up.railway.app`, running
+> commit `af6e1cc` (the hardening-pass code — classification fix, image-
+> suitability checks, decompression-bomb guard, concurrency cap). Verified
+> healthy after redeploy: `/health` returned `{"status":"ok","model_loaded":true}`
+> and a direct request with a deliberately-bad test image returned the new
+> structured rejection response, confirming the new code is what's actually
+> serving requests (see `dev/plan.md` §Hosting for the exact commands). The
+> Azure and Render sections below are the
 > exploration that happened before Railway became the working option —
 > Azure for Students verification never cleared in time and is no longer on
 > the critical path; Render's free tier is a real, currently-viable fallback

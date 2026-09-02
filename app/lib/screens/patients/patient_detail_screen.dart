@@ -78,16 +78,17 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   }
 
   Widget _infoRow(IconData icon, String text) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.inkMuted),
+          Icon(icon, size: 18, color: colors.inkMuted),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14.5, color: AppColors.ink),
+              style: TextStyle(fontSize: 14.5, color: colors.ink),
             ),
           ),
         ],
@@ -98,6 +99,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(widget.patient.name)),
       body: RefreshIndicator(
@@ -154,18 +156,13 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
             ),
             const SizedBox(height: 12),
             if (_errorMessage != null)
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: AppColors.danger),
-              )
+              Text(_errorMessage!, style: TextStyle(color: colors.danger))
             else if (_screenings == null)
-              const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              )
+              Center(child: CircularProgressIndicator(color: colors.primary))
             else if (_screenings!.isEmpty)
               Text(
                 l10n.noScreeningsMessage,
-                style: const TextStyle(color: AppColors.inkMuted),
+                style: TextStyle(color: colors.inkMuted),
               )
             else
               ..._screenings!.map((s) {
@@ -173,11 +170,9 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                 final confidence = (s['confidence'] as num).toDouble();
                 final createdAt = DateTime.parse(s['created_at'] as String);
                 final badgeBg = referable
-                    ? AppColors.dangerSoft
-                    : AppColors.successSoft;
-                final badgeColor = referable
-                    ? AppColors.danger
-                    : AppColors.success;
+                    ? colors.dangerSoft
+                    : colors.successSoft;
+                final badgeColor = referable ? colors.danger : colors.success;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Card(
@@ -214,10 +209,10 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                                   referable
                                       ? l10n.referableLabel
                                       : l10n.nonReferableLabel,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 14.5,
-                                    color: AppColors.ink,
+                                    color: colors.ink,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -231,9 +226,9 @@ class _PatientDetailScreenState extends State<PatientDetailScreen>
                                     '‎${createdAt.toLocal().toString().split('.').first}‎',
                                     (confidence * 100).toStringAsFixed(0),
                                   ),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12.5,
-                                    color: AppColors.inkMuted,
+                                    color: colors.inkMuted,
                                   ),
                                 ),
                               ],

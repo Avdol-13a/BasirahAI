@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../l10n/app_localizations.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
@@ -12,12 +13,13 @@ class LanguageToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
     final isUrdu = Localizations.localeOf(context).languageCode == 'ur';
     final targetLocale = isUrdu ? const Locale('en') : const Locale('ur');
     final label = isUrdu ? l10n.switchToEnglish : l10n.switchToUrdu;
 
     return Material(
-      color: AppColors.surfaceAlt,
+      color: colors.surfaceAlt,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -27,9 +29,16 @@ class LanguageToggleButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.translate, size: 16, color: AppColors.inkMuted),
+              Icon(Icons.translate, size: 16, color: colors.inkMuted),
               const SizedBox(width: 6),
-              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.inkMuted)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colors.inkMuted,
+                ),
+              ),
             ],
           ),
         ),
