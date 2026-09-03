@@ -34,7 +34,7 @@ def _solid_jpeg_bytes(size, color) -> bytes:
 def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "model_loaded": True}
+    assert response.json() == {"status": "ok", "model_loaded": True, "fundus_gate_loaded": True}
 
 
 def test_screen_empty_file_rejected(client):
@@ -143,6 +143,41 @@ def test_screen_logs_raw_model_output(client, caplog):
     assert response.status_code == 200
     assert any("Raw model output" in record.message for record in caplog.records)
     assert any("raw_grade" in record.message for record in caplog.records)
+
+
+def test_screen_non_fundus_content_rejected(client, monkeypatch):
+    """Regression for the 2026-09-03 content-gate addition: a structurally
+    fine, sharp, well-exposed image that the fundus-content classifier is
+    confident is NOT a fundus photo (e.g. the real bug -- the app's own
+    logo) must be rejected, not scored."""
+    monkeypatch.setattr(main_module.fundus_gate, "fundus_probability", lambda image: 0.1)
+    good = _textured_jpeg_bytes()
+    response = client.post("/screen", files={"image": ("photo.jpg", good, "image/jpeg")})
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert detail["code"] == "not_fundus_photo"
+
+
+def test_screen_uncertain_fundus_content_scored_with_warning(client, monkeypatch):
+    """The warn band (between the reject floor and the observed real-fundus
+    floor) must still be scored, with a quality warning attached -- same
+    non-blocking pattern as the blur gate, so a genuine but unusual photo
+    isn't silently refused."""
+    monkeypatch.setattr(main_module.fundus_gate, "fundus_probability", lambda image: 0.75)
+    good = _textured_jpeg_bytes()
+    response = client.post("/screen", files={"image": ("photo.jpg", good, "image/jpeg")})
+    assert response.status_code == 200
+    warnings = response.json()["quality_warnings"]
+    assert len(warnings) == 1
+    assert warnings[0]["code"] == "uncertain_fundus_content"
+
+
+def test_screen_confident_fundus_content_no_warning(client, monkeypatch):
+    monkeypatch.setattr(main_module.fundus_gate, "fundus_probability", lambda image: 0.95)
+    good = _textured_jpeg_bytes()
+    response = client.post("/screen", files={"image": ("photo.jpg", good, "image/jpeg")})
+    assert response.status_code == 200
+    assert response.json()["quality_warnings"] == []
 
 
 def test_screen_busy_returns_503(client, monkeypatch):

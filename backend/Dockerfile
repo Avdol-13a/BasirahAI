@@ -2,11 +2,12 @@ FROM python:3.11-slim AS model-builder
 
 WORKDIR /build
 
-COPY requirements-build.txt export_model.py ./
+COPY requirements-build.txt export_model.py export_fundus_backbone.py ./
 RUN pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 \
         --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements-build.txt \
-    && python export_model.py
+    && python export_model.py \
+    && python export_fundus_backbone.py
 
 
 FROM python:3.11-slim

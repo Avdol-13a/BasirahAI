@@ -24,7 +24,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 
-from . import model
+from . import fundus_gate, model
 from .image_checks import ImageSuitabilityError, check_image_suitability
 
 logging.basicConfig(level=logging.INFO)
@@ -61,6 +61,9 @@ async def lifespan(app: FastAPI):
     logger.info("Loading pretrained DR model (%s)...", model.MODEL_REPO_ID)
     model.load_model()
     logger.info("Model loaded.")
+    logger.info("Loading fundus-content pre-filter...")
+    fundus_gate.load_model()
+    logger.info("Fundus-content pre-filter loaded.")
     yield
 
 
@@ -80,7 +83,11 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "model_loaded": model.is_model_loaded()}
+    return {
+        "status": "ok",
+        "model_loaded": model.is_model_loaded(),
+        "fundus_gate_loaded": fundus_gate.is_model_loaded(),
+    }
 
 
 async def _read_limited(upload: UploadFile, max_bytes: int) -> bytes:
@@ -160,6 +167,17 @@ async def screen(image: UploadFile = File(...)):
         quality_warnings = check_image_suitability(pil_image)
     except ImageSuitabilityError as exc:
         raise HTTPException(status_code=400, detail={"code": exc.code, "message": exc.message})
+
+    # Content check: aspect-ratio/exposure/blur above only ever validated
+    # image *quality*, never whether the image is a fundus photo at all --
+    # a real bug (an unrelated photo returning a confident, wrong DR result)
+    # showed this gap directly. See app/fundus_gate.py and docs/FUNDUS_GATE.md.
+    try:
+        content_warning = fundus_gate.check_fundus_content(pil_image)
+    except ImageSuitabilityError as exc:
+        raise HTTPException(status_code=400, detail={"code": exc.code, "message": exc.message})
+    if content_warning is not None:
+        quality_warnings.append(content_warning)
 
     if not await _reserve_inference_slot():
         raise HTTPException(

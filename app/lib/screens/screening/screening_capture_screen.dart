@@ -106,6 +106,8 @@ class _ScreeningCaptureScreenState extends State<ScreeningCaptureScreen> {
         return l10n.imageTooBlurryMsg;
       case 'not_fundus_like':
         return l10n.imageNotFundusLikeMsg;
+      case 'not_fundus_photo':
+        return l10n.imageNotFundusPhotoMsg;
       default:
         return null;
     }

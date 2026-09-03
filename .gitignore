@@ -64,3 +64,16 @@ backend/eval_data/train.csv
 backend/eval_data/sample_manifest.csv
 backend/eval_data/raw_results.json
 backend/eval_data/metrics_summary.json
+
+# --- Fundus-gate training/validation artifacts (2026-09-03) — same policy
+# as above: reproducible scripts are tracked, generated data/results/caches
+# are not. IDRiD (used for external validation only, never training) is not
+# redistributable and lives outside this repo entirely; the manifest/results
+# below reference its images by local path and are excluded for the same
+# reason. See docs/FUNDUS_GATE.md for the permanent, honest record of what
+# was measured (training metrics and the IDRiD external-validation numbers).
+backend/eval_data/cifar10_kaggle/
+backend/eval_data/model_out/
+backend/eval_data/fundus_gate_metrics.json
+backend/eval_data/idrid_manifest.txt
+backend/eval_data/idrid_validation_results.json

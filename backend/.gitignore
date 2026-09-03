@@ -4,4 +4,6 @@ railway-v*.zip
 __pycache__/
 *.py[cod]
 *.pt
-eval_data/model_out/
+!app/fundus_gate_head.pt
+# eval_data/model_out/ and eval_data/cifar10_kaggle/ are covered by the
+# repo-root .gitignore (backend/eval_data/... prefix).

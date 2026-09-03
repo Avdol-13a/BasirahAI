@@ -156,6 +156,19 @@ Triggered by two real reports: (1) a clinically interpretable but soft fundus im
 - **7 new backend tests + 6 new Flutter tests** added (blur warn-vs-reject tiers, `quality_warnings` propagation through `/screen`, JSON parsing of the new field, a wording regression test asserting the Non-Referable copy never claims DR is absent). `pytest`: 33/33 passing. `flutter analyze`: 0 issues. `flutter test`: 36/36 passing. Debug APK rebuilt successfully end to end.
 - Not yet redeployed to Railway — this pass is committed locally; redeploy before the next live/demo use the same way prior passes were (`railway up` from `backend/`, see §8 of `dev/HANDOFF.md`).
 
+## Content-gate addition (2026-09-03, same day, after the above shipped)
+
+After the blur-gate fix above was deployed and verified, a real regression report surfaced a second, separate bug: the app's own logo (not a fundus photo) submitted to the live backend returned a confident, wrong DR result. Investigated and fixed — full detail in `docs/FUNDUS_GATE.md`. Summary:
+
+- **Root cause:** no check in the pipeline ever verified image *content*, only quality (aspect ratio/exposure/blur). Pre-existing gap, not newly introduced by the blur-gate fix (the logo's blur variance was always far above even the old stricter threshold) — though the blur-gate fix did make it somewhat wider by no longer coincidentally catching soft random photos.
+- **A cheap color-heuristic fix was tried and rejected first**, based on real evidence: it would have caught the logo but waved through the most likely real accidental input (a photo of skin/wood/etc. — all score higher "fundus redness" than real fundus photos do).
+- **Built instead:** a small trained classifier (`backend/app/fundus_gate.py`, `backend/train_fundus_gate.py`) — frozen MobileNetV3-Small backbone + a logistic head trained on the 201 real fundus photos vs. CIFAR-10 photos + procedurally generated flat/graphic images. A first training pass (CIFAR-10 negatives only) looked perfect on paper (1.0 val accuracy) but still failed the logo case (88.8% "fundus") — kept in the docs rather than hidden; diversifying the negatives fixed it.
+- **Real measured thresholds**, not guessed: reject below 0.7 (real fundus floor observed: 0.8575), warn 0.7-0.85 (non-blocking, same two-tier pattern as the blur gate), pass above 0.85. Re-validated against all 201 real fundus photos: 0 rejected, 0 warned.
+- **Memory measured directly** (psutil): ~98MB added on top of the already-loaded DR model runtime; estimated total ~580-610MB, comfortably under Railway's ~1GB.
+- Backbone weights are converted to a plain state dict at Docker build time (`backend/export_fundus_backbone.py`), same pattern as the DR model — no runtime network dependency. The small trained head (~2KB) is committed directly to the repo.
+- 10 new backend tests (fundus-gate threshold logic + `/screen` integration), 2 new Flutter l10n regression checks. `pytest`: 43/43. `flutter analyze`: 0 issues. `flutter test`: 40/40.
+- Not yet redeployed to Railway as of this addition — same as the blur-gate fix above, needs a `railway up` before the next live/demo use.
+
 ## Critical Path (in order — everything else is negotiable)
 
 1. Pretrained model loads and runs — **done**

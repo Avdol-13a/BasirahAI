@@ -66,12 +66,18 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   // Maps a backend quality-warning code (see backend/app/image_checks.py's
-  // ImageQualityWarning) to a localized string, mirroring
-  // ScreeningCaptureScreen._imageIssueMessage's pattern for rejection codes.
-  // Only one code exists today ("soft_focus"); an unrecognized future code
-  // still falls back to the same message rather than showing nothing.
+  // ImageQualityWarning and backend/app/fundus_gate.py) to a localized
+  // string, mirroring ScreeningCaptureScreen._imageIssueMessage's pattern
+  // for rejection codes. An unrecognized future code falls back to the
+  // soft-focus message rather than showing nothing.
   String _qualityWarningMessage(AppLocalizations l10n, String code) {
-    return l10n.imageSoftFocusWarningMsg;
+    switch (code) {
+      case 'uncertain_fundus_content':
+        return l10n.uncertainFundusContentWarningMsg;
+      case 'soft_focus':
+      default:
+        return l10n.imageSoftFocusWarningMsg;
+    }
   }
 
   _ResultContent _contentFor(BuildContext context, ResultCategory category) {
@@ -181,10 +187,10 @@ class _ResultScreenState extends State<ResultScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        _qualityWarningMessage(
-                          l10n,
-                          widget.result.qualityWarningCodes.first,
-                        ),
+                        widget.result.qualityWarningCodes
+                            .map((code) => _qualityWarningMessage(l10n, code))
+                            .toSet() // a soft_focus + an uncertain_fundus_content warning have distinct messages; avoid showing the same message twice if codes ever overlap
+                            .join('\n\n'),
                         style: TextStyle(
                           fontSize: 12,
                           color: colors.inkMuted,

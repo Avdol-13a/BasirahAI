@@ -90,5 +90,7 @@
   "imageTooBlurryMsg": "This photo looks too blurry to analyze. Please hold the camera steady and retake it.",
   "imageNotFundusLikeMsg": "This doesn't look like a retinal fundus photo. Please capture a fundus image.",
   "genericInferenceErrorMsg": "Something went wrong. Please try again.",
-  "imageSoftFocusWarningMsg": "This photo looked a bit soft. The result below may be less reliable — for best accuracy, consider retaking with a steadier hand and better focus."
+  "imageSoftFocusWarningMsg": "This photo looked a bit soft. The result below may be less reliable — for best accuracy, consider retaking with a steadier hand and better focus.",
+  "imageNotFundusPhotoMsg": "This doesn't look like a retinal fundus photo. Please capture or select a fundus image.",
+  "uncertainFundusContentWarningMsg": "This photo didn't clearly look like a retinal fundus photo. The result below may not be meaningful — please make sure you're capturing a fundus image."
 }

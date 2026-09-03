@@ -20,6 +20,8 @@ void main() {
     'imageTooBlurryMsg': (l10n) => l10n.imageTooBlurryMsg as String,
     'imageNotFundusLikeMsg': (l10n) => l10n.imageNotFundusLikeMsg as String,
     'imageSoftFocusWarningMsg': (l10n) => l10n.imageSoftFocusWarningMsg as String,
+    'imageNotFundusPhotoMsg': (l10n) => l10n.imageNotFundusPhotoMsg as String,
+    'uncertainFundusContentWarningMsg': (l10n) => l10n.uncertainFundusContentWarningMsg as String,
   };
 
   for (final entry in getters.entries) {
