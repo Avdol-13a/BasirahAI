@@ -6,3 +6,8 @@ __pycache__/
 Caddyfile
 docker-compose.yml
 README.md
+# Not needed by the Docker build (Dockerfile only COPYs app/, requirements
+# files, and the export_*.py scripts) -- excluding avoids uploading ~760MB
+# of local evaluation datasets/caches (real fundus photos, CIFAR-10) on
+# every deploy.
+eval_data/
