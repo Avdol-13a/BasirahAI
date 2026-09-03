@@ -8,10 +8,13 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 
 **This is a screening/decision-support aid, not a diagnosis.** Every result says so, on-screen, every time.
 
+**[⬇ Download the latest release APK](https://github.com/Avdol-13a/BasirahAI/releases/latest)** — `v1.0.1`, ready to install on Android.
+
 <p align="center">
   <img src="docs/screenshots/login.png" width="220" alt="Login screen">
   <img src="docs/screenshots/result.png" width="220" alt="Referable screening result">
-  <img src="docs/screenshots/result_non_referable.png" width="220" alt="Non-referable screening result">
+  <img src="docs/screenshots/result_non_referable.png" width="220" alt="Non-referable screening result, with a soft-focus quality warning">
+  <img src="docs/screenshots/rejected_non_fundus.jpg" width="220" alt="Fundus-content gate rejecting a non-fundus image">
   <img src="docs/screenshots/urdu.png" width="220" alt="Urdu/RTL patient list">
 </p>
 
@@ -19,7 +22,8 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 
 - **Authenticated accounts** with patient records (name, DOB, gender, optional CNIC/phone)
 - **Screening capture** — camera or gallery upload, with upload-progress feedback and graceful handling of weak/interrupted connections
-- **Image suitability checks** — the backend rejects clearly unusable photos (wrong aspect ratio, too dark/bright, too blurry) before spending an inference call on them, with a specific, localized message for each rejection reason
+- **Image suitability checks** — the backend rejects clearly unusable photos (wrong aspect ratio, too dark/bright, severely blurred) before spending an inference call on them; a borderline-soft photo is scored with a non-blocking quality warning instead of being refused outright, and each rejection carries a specific, localized message
+- **Fundus-content validation** — a small trained classifier checks the upload actually looks like a retinal fundus photo before scoring it, so an unrelated image gets a clear rejection instead of a misleading result; validated against an independent fundus dataset never used in training (see [`docs/FUNDUS_GATE.md`](docs/FUNDUS_GATE.md))
 - **Real AI inference** — an existing, pretrained diabetic-retinopathy model (not trained by us, not a mock) returns a binary Referable/Non-Referable call — decided from the model's aggregated binary probability mass, not a single-class vote — plus a confidence score
 - **Reliable screening history** — each screening save is idempotent (a client-generated id + upsert), so a failed save can be retried from the result screen without ever creating a duplicate history entry; the list refreshes immediately after a new screening
 - **English + Urdu**, including correct RTL mirroring, bidi-safe timestamps, and a persistent language toggle
@@ -28,7 +32,7 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 
 ## Screenshots
 
-Captured 2026-09-02 from the release build against the live Railway backend and the real Supabase project — the login and result screens on the Android emulator, the Urdu/RTL patient list likewise. The referable and non-referable results are genuine `/screen` responses for two real APTOS sample images, not mocked data.
+Login, Referable result, and Urdu/RTL patient list captured 2026-09-02 from the release build on the Android emulator, against the live Railway backend and the real Supabase project. The Non-Referable result and fundus-content-gate rejection were recaptured 2026-09-03 on a real device (release build `v1.0.1`) to reflect that day's fixes — the corrected wording (a Non-Referable result no longer reads as "no DR"), the new non-blocking soft-focus quality warning, and the new fundus-content gate rejecting an unrelated image outright. All results shown are genuine `/screen` responses, not mocked data.
 
 ## Architecture
 
@@ -49,7 +53,8 @@ The backend does one job — validate an image and return a screening result. It
 | HTTP client | `dio` (upload progress) |
 | Auth / DB | Supabase (Postgres + Auth), via `supabase_flutter`, Row-Level Security |
 | Inference backend | FastAPI (Python), Dockerized, one endpoint (`/screen`), with image-suitability validation and a concurrency guard |
-| Model | [jdelgado2002/diabetic_retinopathy_detection](https://huggingface.co/jdelgado2002/diabetic_retinopathy_detection) — ResNet-50 via fastai, MIT license, trained on APTOS 2019 |
+| DR model | [jdelgado2002/diabetic_retinopathy_detection](https://huggingface.co/jdelgado2002/diabetic_retinopathy_detection) — ResNet-50 via fastai, MIT license, trained on APTOS 2019 |
+| Fundus-content gate | Frozen MobileNetV3-Small (ImageNet-pretrained, torchvision) + a small logistic head trained for this project — see [`docs/FUNDUS_GATE.md`](docs/FUNDUS_GATE.md) |
 | Hosting | Railway (Docker) |
 | Localization | `flutter_localizations` + `intl`, ARB files |
 | Theming | Material 3, light/dark/system via `ThemeMode`, choice persisted with `shared_preferences` |
@@ -66,6 +71,7 @@ We ran 201 real APTOS fundus images through the live deployed backend and measur
 
 - Not clinically validated; not tested on a Pakistani population
 - The low-confidence display cutoff (0.6) is a documented placeholder, not empirically tuned
+- The fundus-content gate is a same-day first pass, not an exhaustive detector — it reduces, not eliminates, the risk of scoring an unrelated image (see [`docs/FUNDUS_GATE.md`](docs/FUNDUS_GATE.md) for its measured limitations)
 - MVP-level PII handling — this is a hackathon build, not a production clinical system
 - No raw fundus photos are retained anywhere — only the numeric result is stored
 
