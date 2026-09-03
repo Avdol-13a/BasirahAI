@@ -65,6 +65,15 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  // Maps a backend quality-warning code (see backend/app/image_checks.py's
+  // ImageQualityWarning) to a localized string, mirroring
+  // ScreeningCaptureScreen._imageIssueMessage's pattern for rejection codes.
+  // Only one code exists today ("soft_focus"); an unrecognized future code
+  // still falls back to the same message rather than showing nothing.
+  String _qualityWarningMessage(AppLocalizations l10n, String code) {
+    return l10n.imageSoftFocusWarningMsg;
+  }
+
   _ResultContent _contentFor(BuildContext context, ResultCategory category) {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
@@ -157,6 +166,36 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
               ),
             ),
+            if (widget.result.qualityWarningCodes.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colors.neutralSoft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: colors.neutral),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _qualityWarningMessage(
+                          l10n,
+                          widget.result.qualityWarningCodes.first,
+                        ),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.inkMuted,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(14),

@@ -3,3 +3,5 @@
 railway-v*.zip
 __pycache__/
 *.py[cod]
+*.pt
+eval_data/model_out/

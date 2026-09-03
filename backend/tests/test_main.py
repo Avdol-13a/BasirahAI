@@ -97,7 +97,52 @@ def test_screen_valid_image_returns_mocked_result(client):
         "raw_grade",
         "raw_grade_label",
         "class_probabilities",
+        "quality_warnings",
     }
+    assert body["quality_warnings"] == []
+
+
+def _soft_gradient_jpeg_bytes(size=(300, 300)) -> bytes:
+    """Soft-but-not-degenerate image: lands in the blur gate's warn band, not
+    its reject floor, *after* the lossy JPEG round-trip the real upload path
+    also goes through (JPEG re-encoding further softens a low-amplitude
+    gradient, so the amplitude here is picked to still clear the reject
+    floor post-encode -- see backend/tests/test_image_checks.py for the
+    pre-encode version of this fixture and the reasoning behind the
+    thresholds)."""
+    image = Image.new("RGB", size)
+    pixels = image.load()
+    width, height = size
+    for x in range(width):
+        for y in range(height):
+            value = 120 + int(10 * ((x + y) % 40) / 40)
+            pixels[x, y] = (value, value, value)
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG")
+    return buffer.getvalue()
+
+
+def test_screen_soft_image_scored_with_warning_not_rejected(client):
+    """Regression for the 2026-09-03 blur-gate recalibration: a clinically
+    usable but soft image must be scored (200), carrying a quality warning,
+    never hard-rejected the way it was before the fix."""
+    soft = _soft_gradient_jpeg_bytes()
+    response = client.post("/screen", files={"image": ("photo.jpg", soft, "image/jpeg")})
+    assert response.status_code == 200
+    warnings = response.json()["quality_warnings"]
+    assert len(warnings) == 1
+    assert warnings[0]["code"] == "soft_focus"
+
+
+def test_screen_logs_raw_model_output(client, caplog):
+    """Raw model output must be traceable independent of how the response is
+    later converted/displayed -- see dev/HANDOFF.md."""
+    good = _textured_jpeg_bytes()
+    with caplog.at_level("INFO", logger="basirah"):
+        response = client.post("/screen", files={"image": ("photo.jpg", good, "image/jpeg")})
+    assert response.status_code == 200
+    assert any("Raw model output" in record.message for record in caplog.records)
+    assert any("raw_grade" in record.message for record in caplog.records)
 
 
 def test_screen_busy_returns_503(client, monkeypatch):

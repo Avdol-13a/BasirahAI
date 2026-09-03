@@ -64,8 +64,8 @@
   "captureGuidanceMessage": "Capture or select a clear retinal fundus photo only. Blurry, very dark/bright, or non-fundus photos will be rejected — please retake if that happens.",
 
   "resultTitle": "Screening Result",
-  "nonReferableHeadline": "No Urgent Concern Found",
-  "nonReferableMessage": "No signs of urgent concern were found in this screening. This is not a diagnosis. Regular eye check-ups are still recommended, especially if the patient has diabetes.",
+  "nonReferableHeadline": "No Urgent Signs Found",
+  "nonReferableMessage": "This screening did not find signs of diabetic retinopathy that need urgent treatment. This does not mean diabetic retinopathy is absent — milder changes are still possible. This is not a diagnosis. Regular eye check-ups are still recommended, especially if the patient has diabetes.",
   "referableHeadline": "Please See an Eye-Care Professional",
   "referableMessage": "This screening found signs that should be checked by an eye-care professional. Please arrange an ophthalmologist visit as soon as possible. This is not a diagnosis — only a specialist can confirm what this means.",
   "lowConfidenceHeadline": "Result Not Clear",
@@ -89,5 +89,6 @@
   "imageTooBrightMsg": "This photo looks overexposed to analyze. Please retake the photo.",
   "imageTooBlurryMsg": "This photo looks too blurry to analyze. Please hold the camera steady and retake it.",
   "imageNotFundusLikeMsg": "This doesn't look like a retinal fundus photo. Please capture a fundus image.",
-  "genericInferenceErrorMsg": "Something went wrong. Please try again."
+  "genericInferenceErrorMsg": "Something went wrong. Please try again.",
+  "imageSoftFocusWarningMsg": "This photo looked a bit soft. The result below may be less reliable — for best accuracy, consider retaking with a steadier hand and better focus."
 }

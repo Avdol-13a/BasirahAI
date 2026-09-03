@@ -17,6 +17,22 @@ from torchvision.transforms import functional as TF
 MODEL_REPO_ID = "jdelgado2002/diabetic_retinopathy_detection"
 MODEL_STATE_PATH = Path(os.getenv("MODEL_STATE_PATH", "/model/basirah_resnet50_state.pt"))
 
+# Label mapping re-verified 2026-09-03 against the original checkpoint (not
+# just assumed from the model card): loading the trusted Learner directly via
+# huggingface_hub.from_pretrained_fastai and reading learner.dls.vocab
+# confirms the class-index order is exactly [0, 1, 2, 3, 4] -- index N *is*
+# grade N, nothing is shuffled or reversed. Class-index-by-class-index
+# comparison of this bare-torch pipeline's softmax output against the
+# original Learner's predict() on real images (backend/eval_data/images/,
+# via the throwaway backend/eval_data/compare_pipelines.py script) matched to
+# within ~5e-5 per class -- the converted state dict reproduces the original
+# model, it is not a different/mismatched checkpoint. Independently, running
+# the real 201-image APTOS evaluation sample through this exact pipeline
+# (backend/eval_data/metrics_summary.json) measured 98.8% sensitivity / 98.3%
+# specificity against ground truth -- a reversed mapping would instead show
+# both numbers near 0, not near 1, which rules reversal out empirically as
+# well as by inspection. Do not "fix" this mapping without re-deriving vocab
+# from the checkpoint again first.
 NON_REFERABLE_GRADES = {0, 1}
 REFERABLE_GRADES = {2, 3, 4}
 GRADE_LABELS = {

@@ -157,7 +157,7 @@ async def screen(image: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Could not read this image file.")
 
     try:
-        check_image_suitability(pil_image)
+        quality_warnings = check_image_suitability(pil_image)
     except ImageSuitabilityError as exc:
         raise HTTPException(status_code=400, detail={"code": exc.code, "message": exc.message})
 
@@ -185,4 +185,19 @@ async def screen(image: UploadFile = File(...)):
         os.unlink(tmp_path)
         await _release_inference_slot()
 
+    # Logged before any UI-facing conversion/wording is applied, so the raw
+    # model signal is always recoverable independent of how the client later
+    # displays it (see dev/HANDOFF.md's note on tracing raw outputs).
+    logger.info(
+        "Raw model output: raw_grade=%s (%s) referable=%s confidence=%.4f probs=%s",
+        result["raw_grade"],
+        result["raw_grade_label"],
+        result["referable"],
+        result["confidence"],
+        result["class_probabilities"],
+    )
+
+    result["quality_warnings"] = [
+        {"code": warning.code, "message": warning.message} for warning in quality_warnings
+    ]
     return result

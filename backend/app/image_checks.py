@@ -24,7 +24,24 @@ MIN_ASPECT_RATIO = float(os.getenv("MIN_ASPECT_RATIO", "0.33"))  # ~1:3
 MAX_ASPECT_RATIO = float(os.getenv("MAX_ASPECT_RATIO", "3.0"))  # ~3:1
 MIN_MEAN_BRIGHTNESS = float(os.getenv("MIN_MEAN_BRIGHTNESS", "8"))  # near-black frame
 MAX_MEAN_BRIGHTNESS = float(os.getenv("MAX_MEAN_BRIGHTNESS", "247"))  # blown-out frame
-MIN_BLUR_VARIANCE = float(os.getenv("MIN_BLUR_VARIANCE", "15"))  # Laplacian-variance floor
+
+# Two-tier blur gate (recalibrated 2026-09-03 -- see docs/IMAGE_PIPELINE.md).
+# The original single threshold (15) was set without reference to real fundus
+# photography and turned out to hard-reject genuinely usable images: measured
+# Laplacian-variance scores across the real 201-image APTOS evaluation sample
+# (backend/eval_data/, every one a genuine, clinically-labeled fundus photo)
+# ranged as low as 3.6, with a full quarter of them scoring at or below 15.
+# Fundus photos are inherently soft (smooth continuous-tone retinal
+# background, no hard edges outside the vessels/disc) compared to an
+# ordinary photo, so a threshold tuned on generic photography over-rejects
+# them. MIN_BLUR_VARIANCE_REJECT now sits below every score observed in that
+# real sample (only genuinely-degenerate input -- near-flat frames, heavy
+# motion blur -- falls below it); MIN_BLUR_VARIANCE_WARN keeps the old value
+# as a *non-blocking* threshold: an image between the two still gets scored,
+# but the response carries a quality warning so the app can tell the user the
+# result may be less reliable, instead of refusing to screen it at all.
+MIN_BLUR_VARIANCE_REJECT = float(os.getenv("MIN_BLUR_VARIANCE_REJECT", "3"))
+MIN_BLUR_VARIANCE_WARN = float(os.getenv("MIN_BLUR_VARIANCE_WARN", "15"))
 # The blur check downsamples before computing a float64 Laplacian array, so
 # its memory cost is bounded independent of the input image's resolution
 # (e.g. an ungated 40-megapixel image would otherwise cost ~320MB for that
@@ -53,6 +70,17 @@ class ImageSuitabilityError(Exception):
         self.code = code
         self.message = message
         super().__init__(message)
+
+
+class ImageQualityWarning:
+    """A non-blocking suitability concern: the image is still scored, but the
+    caller should know the result may be less reliable. Same `code`/`message`
+    shape as `ImageSuitabilityError` so the Flutter client can reuse its
+    code-to-localized-string mapping."""
+
+    def __init__(self, code: str, message: str):
+        self.code = code
+        self.message = message
 
 
 def check_aspect_ratio(image: Image.Image) -> None:
@@ -98,7 +126,7 @@ def _laplacian_variance(grayscale: Image.Image) -> float:
     return float(laplacian.var())
 
 
-def check_exposure_and_blur(image: Image.Image) -> None:
+def check_exposure_and_blur(image: Image.Image) -> ImageQualityWarning | None:
     grayscale = image.convert("L")
     mean_brightness = ImageStat.Stat(grayscale).mean[0]
 
@@ -113,11 +141,22 @@ def check_exposure_and_blur(image: Image.Image) -> None:
             "This photo looks overexposed to analyze. Please retake the photo.",
         )
 
-    if _laplacian_variance(grayscale) < MIN_BLUR_VARIANCE:
+    variance = _laplacian_variance(grayscale)
+    if variance < MIN_BLUR_VARIANCE_REJECT:
         raise ImageSuitabilityError(
             "too_blurry",
             "This photo looks too blurry to analyze. Please hold the camera steady and retake it.",
         )
+    if variance < MIN_BLUR_VARIANCE_WARN:
+        # Soft, but not the kind of severe/motion blur the reject floor above
+        # is meant to catch -- score it, but let the caller flag the result
+        # as potentially less reliable rather than refusing to screen at all.
+        return ImageQualityWarning(
+            "soft_focus",
+            "This photo looks a bit soft. The result may be less reliable — "
+            "for best accuracy, consider retaking with a steadier hand and better focus.",
+        )
+    return None
 
 
 def check_fundus_like_structure(image: Image.Image) -> None:
@@ -142,8 +181,17 @@ def check_fundus_like_structure(image: Image.Image) -> None:
         )
 
 
-def check_image_suitability(image: Image.Image) -> None:
-    """Run all suitability heuristics; raises ImageSuitabilityError on the first failure."""
+def check_image_suitability(image: Image.Image) -> list[ImageQualityWarning]:
+    """Run all suitability heuristics.
+
+    Raises ImageSuitabilityError on the first hard rejection. Returns a list
+    of non-blocking ImageQualityWarning entries (empty if none) for concerns
+    that don't warrant refusing to screen the image.
+    """
     check_aspect_ratio(image)
-    check_exposure_and_blur(image)
+    warnings = []
+    blur_warning = check_exposure_and_blur(image)
+    if blur_warning is not None:
+        warnings.append(blur_warning)
     check_fundus_like_structure(image)
+    return warnings

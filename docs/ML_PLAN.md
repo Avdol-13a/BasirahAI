@@ -65,8 +65,19 @@ A `confidence` below a chosen cutoff routes to the "low-confidence / borderline"
 - Claim clinical validation, regulatory clearance, or a specific accuracy for our own deployed pipeline without measuring it ourselves (see `docs/EVALUATION_RESULTS.md`).
 - Present the model author's self-reported metric as our own measured performance.
 
+## Label mapping and pipeline-parity re-verification (2026-09-03)
+
+Triggered by a real report: an external clinical reviewer flagged one image as showing DR while the app returned Non-Referable at ~97-99% confidence. Investigated whether this was a reversed referable/non-referable mapping or a preprocessing mismatch between the production bare-torch pipeline and the original fastai Learner:
+
+- **Vocab re-checked directly against the checkpoint** (not just the model card): loading the real Learner via `from_pretrained_fastai` and reading `learner.dls.vocab` confirms `[0, 1, 2, 3, 4]` — index N is grade N, not reversed.
+- **Pipeline parity re-verified on real images**, not just a synthetic tensor: running the same real photos through both the original Learner's `predict()` and the production bare-torch pipeline (`backend/eval_data/compare_pipelines.py`, throwaway script) matched to within ~5e-5 per class probability.
+- **Empirically, a reversed mapping is ruled out**: the 201-image real APTOS evaluation (`backend/eval_data/metrics_summary.json`) measured 98.8% sensitivity / 98.3% specificity against ground truth. A reversed mapping would put both numbers near 0, not near 1.
+- **Conclusion:** the reported case is a genuine, isolated model false negative, not a pipeline bug. It matches `backend/eval_data/raw_results.json`'s one documented false negative in the 201-image sample: image `a06e41bd2634`, true grade 2 (Moderate, referable), predicted Non-Referable at 97.4% confidence (`raw_grade` 1, "Mild"). This is a borderline case right at the referable/non-referable cut point — the kind of case any binary classifier at this sensitivity level will occasionally miss (1 false negative out of 82 true-referable images in this sample). **Do not "fix" this by retraining, replacing the model, or tuning the low-confidence cutoff to force this one case to a different answer** — see `dev/HANDOFF.md`'s note on not fabricating validation. The honest response is the UI wording fix below (never imply Non-Referable means DR-free) plus keeping the standing safety disclaimer and confidence display intact.
+- Separately, the same investigation led to recalibrating the image-suitability blur gate (unrelated root cause, found while auditing the pipeline end to end) — see `docs/IMAGE_PIPELINE.md`.
+
 ## Fill in as you go
 
+- [x] Label mapping and bare-torch/fastai pipeline parity independently re-verified (2026-09-03, see above)
 - [ ] Low-confidence cutoff finalized after Day 2's evaluation
 - [ ] Confirmed the same loading approach works inside the actual Linux Docker container (not just local Windows dev)
 - [ ] If the Kontawat fallback model was ever used instead, this document and `docs/DATASET.md` updated to reflect its (undocumented) provenance honestly

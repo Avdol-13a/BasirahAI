@@ -39,6 +39,29 @@ void main() {
       });
       expect(result.confidence, 1.0);
     });
+
+    test('defaults qualityWarningCodes to empty when the field is absent', () {
+      final result = ScreeningResult.fromJson({
+        'referable': false,
+        'confidence': 0.9,
+        'raw_grade': 0,
+        'raw_grade_label': 'No DR',
+      });
+      expect(result.qualityWarningCodes, isEmpty);
+    });
+
+    test('parses quality_warnings codes when present', () {
+      final result = ScreeningResult.fromJson({
+        'referable': false,
+        'confidence': 0.7,
+        'raw_grade': 1,
+        'raw_grade_label': 'Mild',
+        'quality_warnings': [
+          {'code': 'soft_focus', 'message': 'This photo looked a bit soft.'},
+        ],
+      });
+      expect(result.qualityWarningCodes, ['soft_focus']);
+    });
   });
 
   group('mapDioExceptionToInferenceException', () {

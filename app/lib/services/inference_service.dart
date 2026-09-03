@@ -9,19 +9,33 @@ class ScreeningResult {
   final int rawGrade;
   final String rawGradeLabel;
 
+  /// Stable, machine-readable codes (e.g. "soft_focus") for non-blocking
+  /// image-quality concerns the backend still scored the image despite —
+  /// see backend/app/image_checks.py's ImageQualityWarning. Empty when the
+  /// image had no such concerns. Unlike a rejection (InferenceException),
+  /// these arrive alongside a normal successful result.
+  final List<String> qualityWarningCodes;
+
   ScreeningResult({
     required this.referable,
     required this.confidence,
     required this.rawGrade,
     required this.rawGradeLabel,
+    this.qualityWarningCodes = const [],
   });
 
   factory ScreeningResult.fromJson(Map<String, dynamic> json) {
+    final warnings = json['quality_warnings'] as List<dynamic>?;
     return ScreeningResult(
       referable: json['referable'] as bool,
       confidence: (json['confidence'] as num).toDouble(),
       rawGrade: json['raw_grade'] as int,
       rawGradeLabel: json['raw_grade_label'] as String,
+      qualityWarningCodes: warnings == null
+          ? const []
+          : warnings
+              .map((w) => (w as Map)['code'] as String)
+              .toList(growable: false),
     );
   }
 }
