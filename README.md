@@ -8,7 +8,16 @@ BasirahAI is a mobile screening-support tool: a health worker (or the patient th
 
 **This is a screening/decision-support aid, not a diagnosis.** Every result says so, on-screen, every time.
 
-**[⬇ Download the latest release APK](https://github.com/Avdol-13a/BasirahAI/releases/latest)** — `v1.0.1`, ready to install on Android.
+## Current deployment — October 2026
+
+The screening API moved from Railway to **AWS Lightsail** on October 10, 2026 after the Railway trial ended. The existing **Supabase project has been resumed** and continues to handle authentication, patients, and screening history.
+
+- **API:** [https://18-141-92-11.sslip.io](https://18-141-92-11.sslip.io)
+- **Health check:** [/health](https://18-141-92-11.sslip.io/health) — both the DR model and fundus-content filter verified loaded on October 11, 2026.
+- **Android:** `v1.0.2` (build `3`) was built, installed on a real device, and confirmed working by the tester on October 10. All 40 Flutter tests and static analysis passed.
+- **Download status:** the AWS-connected `v1.0.2` APK has not yet been uploaded to GitHub Releases. The [previous `v1.0.1` release](https://github.com/Avdol-13a/BasirahAI/releases/tag/v1.0.1) still points to Railway and cannot reach the new API. Build with the explicit AWS URL below until the new APK is published.
+
+The new APK uses a different signing certificate from the previous release, so existing installations require uninstalling the old app first. This clears local app data and requires signing in again; records already saved in Supabase remain available.
 
 <p align="center">
   <img src="docs/screenshots/login.png" width="220" alt="Login screen">
@@ -55,7 +64,7 @@ The backend does one job — validate an image and return a screening result. It
 | Inference backend | FastAPI (Python), Dockerized, one endpoint (`/screen`), with image-suitability validation and a concurrency guard |
 | DR model | [jdelgado2002/diabetic_retinopathy_detection](https://huggingface.co/jdelgado2002/diabetic_retinopathy_detection) — ResNet-50 via fastai, MIT license, trained on APTOS 2019 |
 | Fundus-content gate | Frozen MobileNetV3-Small (ImageNet-pretrained, torchvision) + a small logistic head trained for this project — see [`docs/FUNDUS_GATE.md`](docs/FUNDUS_GATE.md) |
-| Hosting | Railway (Docker) |
+| Hosting | AWS Lightsail (Ubuntu 24.04, Docker Compose, Caddy HTTPS) |
 | Localization | `flutter_localizations` + `intl`, ARB files |
 | Theming | Material 3, light/dark/system via `ThemeMode`, choice persisted with `shared_preferences` |
 
@@ -78,19 +87,21 @@ We ran 201 real APTOS fundus images through the live deployed backend and measur
 ## Getting Started
 
 Backend setup and deployment: [`backend/README.md`](backend/README.md)
-Database schema (Postgres + RLS policies): [`supabase/schema.sql`](supabase/schema.sql)
+Database schema (Postgres + RLS policies): [`supabase/schema.sql`](supabase/schema.sql). For an existing project, inspect its current schema and apply only missing [migrations](supabase/migrations); do not recreate it as part of the hosting move.
 
 ```bash
-# Backend (local dev)
+# Backend (local container, including model artifacts)
 cd backend
-source .venv/Scripts/activate
-uvicorn app.main:app --reload --port 8000
+docker build -t basirah-api .
+docker run --rm -p 8000:7860 basirah-api
 
-# Flutter app
+# Flutter app (in another terminal, from the repository root)
 cd app
 flutter build apk --release \
   --dart-define=SUPABASE_URL=<your-supabase-url> \
-  --dart-define=SUPABASE_ANON_KEY=<your-supabase-anon-key>
+  --dart-define=SUPABASE_ANON_KEY=<your-supabase-anon-key> \
+  --dart-define=BACKEND_URL=https://18-141-92-11.sslip.io \
+  --build-name=1.0.2 --build-number=3
 ```
 
 ### Running the tests

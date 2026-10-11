@@ -1,128 +1,103 @@
 # BasirahAI Inference Backend
 
-Stateless FastAPI service that wraps a pretrained diabetic retinopathy
-screening model. See the project's `docs/ML_PLAN.md` and `dev/plan.md` (repo
-root) for full context — this backend does one job: validate an uploaded
-retinal photo and return a Referable / Non-Referable screening result.
+Stateless FastAPI service that validates retinal fundus images and returns a Referable / Non-Referable screening result. Authentication, patient records, and screening history remain in Supabase; the Flutter app writes results there directly.
 
-This is a screening/decision-support signal, not a medical diagnosis.
+This is screening support, not a medical diagnosis.
 
-> **Deployment status (2026-09-02):** this service is **currently live on
-> Railway** at `https://basirahai-api-production.up.railway.app`, running
-> commit `af6e1cc` (the hardening-pass code — classification fix, image-
-> suitability checks, decompression-bomb guard, concurrency cap). Verified
-> healthy after redeploy: `/health` returned `{"status":"ok","model_loaded":true}`
-> and a direct request with a deliberately-bad test image returned the new
-> structured rejection response, confirming the new code is what's actually
-> serving requests (see `dev/plan.md` §Hosting for the exact commands). The
-> Azure and Render sections below are the
-> exploration that happened before Railway became the working option —
-> Azure for Students verification never cleared in time and is no longer on
-> the critical path; Render's free tier is a real, currently-viable fallback
-> now that the optimized runtime fits under its 512MB limit, but switching
-> to it wasn't pursued once Railway was already live and working. Both
-> sections are kept as real, reusable instructions in case either is
-> revisited later, not as the current plan.
+## Current deployment: AWS Lightsail
+
+Migrated from Railway on **October 10, 2026** after the trial ended. Supabase was resumed, and the AWS-connected Android build was confirmed working on a real device.
+
+- Instance: `Basirah-api`, Ubuntu 24.04 LTS, 2 GB RAM, dual-stack networking.
+- Static public IPv4: `18.141.92.11`.
+- API: https://18-141-92-11.sslip.io
+- HTTPS: Caddy reverse proxy with automatically managed certificates; `sslip.io` resolves the hostname to the static IP.
+- Runtime: Docker Compose, one backend process, CPU-only PyTorch. Both model artifacts are included during the image build, so startup does not need to download them.
+- Verified October 11, 2026: `/health` reports both models loaded. A blank-image request was also verified to return the structured `too_dark` rejection during deployment on October 10.
+
+The backend has no persistent patient database and does not retain uploaded photos after processing. Caddy certificate state is retained in Docker volumes.
 
 ## Endpoints
 
-- `GET /health` — `{"status": "ok", "model_loaded": true}`
-- `POST /screen` — multipart form field `image` (jpeg/png) →
-  `{"referable": bool, "confidence": float, "raw_grade": 0-4, "raw_grade_label": str, "class_probabilities": [float x5]}`
+- `GET /health` returns `{"status":"ok","model_loaded":true,"fundus_gate_loaded":true}` when both models are loaded.
+- `POST /screen` accepts multipart field `image` (JPEG/PNG) and returns `referable`, `confidence`, `raw_grade`, `raw_grade_label`, `class_probabilities`, and `quality_warnings`.
+- Invalid or unsuitable images receive an error response. Image suitability errors include a stable `detail.code` and a readable `detail.message` for the app's localized handling.
 
-## Current deployment targets
+## Deploy on Lightsail
 
-The runtime uses plain PyTorch rather than retaining the full fastai Learner.
-The original learner and the optimized runtime have been checked at tensor and
-logit level; differences are limited to floating-point noise. Total FastAPI
-memory after a prediction measured approximately 483 MB, allowing it to run on
-Render's 512 MB Free instance.
+1. Create an Ubuntu 24.04 Linux instance with 2 GB RAM and attach a static IPv4 address. Allow inbound TCP 80 and 443 for HTTP/HTTPS; retain SSH access for administration. The backend's port 7860 stays internal to Docker.
+2. In the server terminal, install Docker and Git:
 
-### Railway (immediate 30-day trial)
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y docker.io docker-compose-v2 git curl
+   sudo systemctl enable --now docker
+   ```
 
-Railway can deploy this directory directly. `railway.json` selects the
-Dockerfile and allows five minutes for the model-loading health check. The
-Dockerfile honors Railway's injected `PORT` variable. Enable Serverless mode so
-the $5 trial credit is not consumed while the API is idle.
+3. Clone the project and build the backend:
+
+   ```bash
+   git clone https://github.com/Avdol-13a/BasirahAI.git
+   cd BasirahAI/backend
+   sudo docker compose build backend
+   ```
+
+4. Replace the Azure placeholder in `Caddyfile` with the following configuration **on the existing server**. For a different server, use a hostname resolving to that server's static IP instead:
+
+   ```caddyfile
+   18-141-92-11.sslip.io {
+       reverse_proxy backend:7860
+   }
+   ```
+
+5. Start the services and verify them:
+
+   ```bash
+   sudo docker compose up -d
+   sudo docker compose logs --tail=40
+   curl --fail https://18-141-92-11.sslip.io/health
+   ```
+
+The initial build downloads dependencies and exports the DR model and fundus backbone. Allow time for the build, startup, and certificate issuance. Both services use `restart: unless-stopped`.
+
+## Connect the Android app
+
+From the repository's `app/` directory:
 
 ```bash
-cd backend
-railway login
-railway init
-railway up
-railway domain
+flutter build apk --release \
+  --dart-define=SUPABASE_URL=<your-existing-supabase-url> \
+  --dart-define=SUPABASE_ANON_KEY=<your-public-anon-key> \
+  --dart-define=BACKEND_URL=https://18-141-92-11.sslip.io \
+  --build-name=1.0.2 --build-number=3
 ```
 
-### Render Free (long-term target)
+Use the existing Supabase project. Never embed its service-role key in the app. The explicit `BACKEND_URL` overrides any older Railway default in a checkout. Already installed APKs need to be rebuilt/replaced to change their endpoint.
 
-The repository-root `render.yaml` defines the free Docker web service. Connect
-the repository as a Blueprint in Render. Free services sleep after 15 minutes;
-the first screening after sleep must wait for model startup.
+## Operations
 
-## Azure fallback
+- Inspect service state with `sudo docker compose ps` and logs with `sudo docker compose logs --tail=100` from the backend directory.
+- Keep the static IP attached and preserve the `caddy_data` and `caddy_config` volumes so certificates survive restarts.
+- Before rebuilding after a source update, preserve the server's customized `Caddyfile`; the repository still contains a placeholder. Rebuild with `sudo docker compose build backend`, then run `sudo docker compose up -d` and check `/health`.
+- Monitor AWS credit balance, expiry, and usage in Billing. Configure budget alerts; they are notifications, not a spending cap. Credit coverage and account-plan limits depend on the account.
+- Supabase Free can pause during inactivity. Check authentication and database access before a demo and resume the project if necessary.
 
-Hugging Face Spaces (the original hosting plan) now requires a paid Pro
-plan for any Space that runs compute — confirmed dead end as of Aug 2026,
-see `dev/plan.md`. **Azure for Students** gives $100 of credit for 12 months
-with **no credit card required** (verify via school email, or via the
-GitHub Student Developer Pack if the school email isn't recognized) — this
-project's real memory footprint (~550MB with the model loaded, measured
-directly) needs more RAM than most truly-free-forever tiers offer, so a
-small Azure VM is the most realistic option that costs nothing out of
-pocket. A `B1s` or `B2s` VM (1-4GB RAM) costs a few dollars a month —
-comfortably inside the $100 credit for the whole hackathon and well beyond.
+## Local development and tests
 
-## Deploying to an Azure for Students VM
+For a local container, build with `docker build -t basirah-api .`, then run `docker run --rm -p 8000:7860 basirah-api`. Check `http://localhost:8000/health`. This includes the model export steps required by the runtime.
 
-1. **Activate Azure for Students** at [azure.microsoft.com/free/students](https://azure.microsoft.com/en-us/free/students) — sign in with your school email, or with your GitHub account if you have the GitHub Student Developer Pack.
-2. **Create a Linux VM** (Azure Portal → Create a resource → Virtual Machine):
-   - Image: **Ubuntu Server 24.04 LTS**
-   - Size: **B2s** (2 vCPU, 4GB RAM) — comfortable headroom over our ~550MB footprint
-   - Authentication: SSH public key (Azure can generate a key pair for you — download and keep the private key)
-   - Under **Networking**, allow inbound ports **22 (SSH), 80 (HTTP), 443 (HTTPS)**
-3. **Set a DNS name label** so you get free HTTPS without buying a domain: after the VM is created, go to its **Overview** page → **DNS name** → **Configure** → pick a label (e.g. `basirahai`). Your public URL becomes something like `basirahai.eastus.cloudapp.azure.com`.
-4. **Edit `Caddyfile`** in this folder — replace the placeholder domain with your actual VM's DNS name from step 3.
-5. **SSH into the VM** and install Docker:
-   ```bash
-   ssh -i /path/to/your-key.pem azureuser@<your-vm-public-ip>
-   curl -fsSL https://get.docker.com | sudo sh
-   sudo usermod -aG docker $USER
-   # log out and back in for the group change to apply
-   ```
-6. **Copy this `backend/` folder to the VM** (from your own machine):
-   ```bash
-   scp -i /path/to/your-key.pem -r backend azureuser@<your-vm-public-ip>:~/basirah-backend
-   ```
-7. **On the VM, start everything:**
-   ```bash
-   cd ~/basirah-backend
-   sudo docker compose up -d --build
-   ```
-8. **Verify:** `https://<your-dns-label>.<region>.cloudapp.azure.com/health` should return `{"status": "ok", "model_loaded": true}` within a minute or two (Caddy needs a moment to get its first Let's Encrypt certificate, and the container needs to download+load the model on first start).
-
-**Set a spending alert.** In the Azure Portal, go to **Cost Management → Budgets** and set an alert well under $100 (e.g. $20) so you get warned long before the student credit could run out — you shouldn't come close to this running one small VM for a week, but it's a free safety net.
-
-## Running locally (for development/testing, not deployment)
+Backend tests mock model loading/inference and do not download checkpoints:
 
 ```bash
 python -m venv .venv
-source .venv/Scripts/activate   # Windows Git Bash; use .venv/bin/activate on Linux/Mac
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-## Testing
-
-Tests mock model loading/inference (`tests/conftest.py`) — they never
-download or load the real checkpoint, so no Hugging Face Hub access or GPU
-is needed, just the CPU torch/torchvision wheels already required at
-runtime:
-
-```bash
-source .venv/Scripts/activate   # or .venv/bin/activate on Linux/Mac
+# Activate .venv using the command appropriate to your shell.
 pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest tests/ -v
 ```
 
-The same commands run in CI — see `.github/workflows/ci.yml`.
+The GitHub Actions workflow also runs backend tests, Flutter analysis, and Flutter tests.
+
+## Previous hosting configurations
+
+`railway.json`, the root `render.yaml`, and the Azure-style placeholder in `Caddyfile` are retained from earlier hosting work. They do not describe the current deployment. Historical experiments are recorded in `dev/HANDOFF.md` and `dev/plan.md`; their trial, pricing, and availability claims should not be treated as current offers.
