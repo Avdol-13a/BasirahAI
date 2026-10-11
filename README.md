@@ -15,7 +15,7 @@ The screening API moved from Railway to **AWS Lightsail** on October 10, 2026 af
 - **API:** [https://18-141-92-11.sslip.io](https://18-141-92-11.sslip.io)
 - **Health check:** [/health](https://18-141-92-11.sslip.io/health) — both the DR model and fundus-content filter verified loaded on October 11, 2026.
 - **Android:** `v1.0.2` (build `3`) was built, installed on a real device, and confirmed working by the tester on October 10. All 40 Flutter tests and static analysis passed.
-- **Download status:** the AWS-connected `v1.0.2` APK has not yet been uploaded to GitHub Releases. The [previous `v1.0.1` release](https://github.com/Avdol-13a/BasirahAI/releases/tag/v1.0.1) still points to Railway and cannot reach the new API. Build with the explicit AWS URL below until the new APK is published.
+- **[Download the Android APK — v1.0.2](https://github.com/Avdol-13a/BasirahAI/releases/download/v1.0.2/BasirahAI-1.0.2-AWS.apk)** · [Release notes](https://github.com/Avdol-13a/BasirahAI/releases/tag/v1.0.2). Older releases still point to Railway; install this AWS-connected version for screening.
 
 The new APK uses a different signing certificate from the previous release, so existing installations require uninstalling the old app first. This clears local app data and requires signing in again; records already saved in Supabase remain available.
 
