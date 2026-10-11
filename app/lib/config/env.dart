@@ -15,12 +15,12 @@ class Env {
   static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  /// Inference backend base URL. Defaults to the live Railway deployment.
+  /// Inference backend base URL. Defaults to the AWS Lightsail deployment.
   /// Override with --dart-define=BACKEND_URL=http://127.0.0.1:8000 when using
   /// `adb reverse tcp:8000 tcp:8000` for local backend development.
   static const String backendBaseUrl = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'https://basirahai-api-production.up.railway.app',
+    defaultValue: 'https://18-141-92-11.sslip.io',
   );
 
   static bool get isSupabaseConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
